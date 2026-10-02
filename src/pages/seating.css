@@ -1,0 +1,86 @@
+.seating {
+  grid-template-columns: minmax(0, 1fr) 26rem;
+}
+.seating__map {
+  min-height: 30rem;
+}
+.seating__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-height: 0;
+  min-width: 0;
+}
+.reserve__head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 1.0625rem;
+}
+.reserve__label {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+.reserve__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.reserve__note {
+  margin: 0;
+}
+.seating__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.seating__stats .v {
+  font-size: 1.75rem;
+}
+.seat-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.seat-results__btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  cursor: pointer;
+  min-height: 2.75rem;
+  align-items: center;
+}
+.seat-results__btn:hover {
+  background: var(--surface-hover);
+}
+
+html[data-tier='laptop'] .seating {
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  align-items: start;
+}
+html[data-tier='laptop'] .seating__map {
+  min-height: 34rem;
+}
+html[data-tier='laptop'] .reserve__label,
+html[data-tier='mobile'] .reserve__label {
+  font-size: 2.5rem;
+}
+html[data-tier='mobile'] .seating {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-tier='mobile'] .seating__map {
+  min-height: 0;
+  padding: 1rem 0.75rem;
+}
+html[data-tier='mobile'] .seating__map .seatmap[data-orientation='vertical'] .seatmap__seats {
+  grid-template-rows: repeat(var(--count), 3rem);
+}

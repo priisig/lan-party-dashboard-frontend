@@ -1,0 +1,56 @@
+/* Colour and type tokens, taken 1:1 from the Claude Design prototype. The dashboard is dark by design. */
+:root {
+  color-scheme: dark;
+
+  --bg: #0A0814;
+  --bg-deep: #0C0919;
+  --surface-sunken: #0F0B1E;
+  --surface: #141026;
+  --surface-hover: #1C1733;
+  --surface-active: #1B1640;
+  --surface-selected: #241B45;
+  --gradient-start: #22184A;
+  --gradient-banner: #1B1340;
+
+  --border: #2A2347;
+  --border-subtle: #241E3E;
+  --border-strong: #352C5C;
+  --border-accent: #3B2F6E;
+  --seat-border: #4A3F7A;
+
+  --text: #ECE8FF;
+  --text-soft: #CFC9EA;
+  --text-muted: #B3ABD6;
+  --text-dim: #9C95C2;
+  --text-faint: #8F88B5;
+
+  --purple: #9B5CFF;
+  --blue: #3D8BFF;
+  --green: #22D37A;
+  --cyan: #4FD1E8;
+  --red: #FF5A6A;
+  --yellow: #E8B33A;
+  --grey: #6B6390;
+
+  --green-text: #5BEAA3;
+  --green-bg: #0F3A26;
+  --green-ink: #06140D;
+  --blue-text: #8FBCFF;
+  --blue-bg: #132A52;
+  --red-bg: #2A1220;
+  --yellow-bg: #3A2A0C;
+  --link: #7FB2FF;
+  --link-hover: #B7D3FF;
+  --taken: #3B2F6E;
+  --taken-text: #D9D2FF;
+
+  --font-display: 'Chakra Petch', 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --gap: 1.25rem;
+  --page-pad-x: 2rem;
+}
