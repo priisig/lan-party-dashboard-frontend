@@ -15,8 +15,10 @@ export function useMe() {
     queryKey: authKeys.me,
     queryFn: async () => {
       try {
-        // 204 = visitor without session
-        return (await api.get<Me | undefined>('/api/auth/me')) ?? null;
+        // 204 = visitor without session. Anything without a nickname (e.g. a session from the old
+        // admin-code login) is treated as logged out instead of breaking the page.
+        const me = await api.get<Me | undefined>('/api/auth/me');
+        return me && typeof me.nickname === 'string' ? me : null;
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) return null;
         throw e;
