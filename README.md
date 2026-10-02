@@ -19,8 +19,11 @@ npm test           # unit tests
 npm run build      # type check + production build to dist/
 ```
 
-Start the backend first (see its README; `LAN_SEED_DEMO=true` gives you demo data). Use the `BACKEND_URL`
-environment variable to point the dev proxy at another backend.
+Start the backend first (`./gradlew bootRun` in the backend repo – with its `.env` it brings its own database and
+demo data). Then open http://localhost:5173 and log in with the organiser from the backend's `.env`
+(default `orga@lan.local` / `orga-pass`).
+
+To point the dev proxy at another backend, copy `.env.example` to `.env.local` and change `BACKEND_URL`.
 
 ## Views
 
