@@ -6,3 +6,5 @@ coverage
 .git
 .github
 .idea
+.env.local
+.env.*.local
