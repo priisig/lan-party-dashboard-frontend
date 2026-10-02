@@ -26,14 +26,23 @@ environment variable to point the dev proxy at another backend.
 
 | Route | View |
 |---|---|
-| `/` | Overview: welcome, infos, "Läuft gerade" / next, schedule, game servers, sign-up, seats |
-| `/turniere` | tournaments, bracket (from Challonge), registration form, participants |
-| `/sitzplan` | seat map, reservation, "Wer sitzt wo?" search |
+| `/` | Overview (scrolling page): welcome, "Jetzt läuft", profile, Teamspeak, WLAN with QR code, servers, programme, tournaments, seat map teaser |
+| `/turniere` | tournaments, bracket (from Challonge), sign-up (account needed), participants |
+| `/sitzplan` | seat map, reserve / change / cancel own seat (account needed), player search |
 | `/stats` | Nerd Stats: pushed metrics + integration widgets |
-| `/admin` | admin area (login with personal code), `/admin/sitzordnung`, `/admin/events` |
+| `/login`, `/registrieren` | login and account creation (`?next=` returns to the page you came from) |
+| `/profil` | own reservation, tournaments, profile data, password change |
+| `/admin` | admin panel for accounts with role *Orga*; `/admin/sitzordnung` (seat editor), `/admin/events` |
 
-**Kiosk / beamer:** `/?kiosk=1` rotates through the views set in the admin area, forces the wall layout,
-hides the admin lock and the cursor, and never scrolls. `?kiosk=0` turns it off again (the setting is kept per
+**Coloured words:** admin-editable headings accept `{lila:Wort}` markup (`lila`, `blau`, `gruen`, `orange`, `rot`).
+The admin fields have colour swatches: select text, click a colour. Rendering is in `components/AccentText.tsx`
+(text nodes only, never HTML).
+
+**Seat map:** orientation (rows horizontal / vertical), row and seat order, and room markers (beamer, entrance, …
+on any edge) are independent settings, so moving the beamer never rotates the seats.
+
+**Kiosk / beamer:** `/?kiosk=1` rotates through the views set in the admin area, forces the wall layout
+(fit-to-screen grid instead of the scrolling page), hides the cursor and never scrolls. `?kiosk=0` turns it off again (the setting is kept per
 browser tab).
 
 ## Screen sizes
@@ -61,12 +70,12 @@ The layout tier is set as `<html data-tier="…">` (`src/hooks/useLayoutTier.ts`
 src/
   api/          types (mirror the backend DTOs), fetch client with CSRF handling, query hooks
   layout/       PublicLayout (header, LIVE tag, clock, announcement bar, bottom nav, kiosk rotation)
-  pages/        Overview, Tournaments, Seating, NerdStats (+ CSS per page)
-  components/   SeatMap (shared with admin), BracketView, Icon, Logo
+  pages/        Overview, Tournaments, Seating, NerdStats, Auth (login/registration), Profile (+ CSS per page)
+  components/   SeatMap (shared with admin), BracketView, AccentText, WifiQr, Icon, Logo, Avatar
   widgets/      Nerd Stats widgets + registry
-  admin/        admin app (lazy loaded): login, layout, sections/, seating editor, events
+  admin/        admin panel (lazy loaded): sidebar layout, sections/, AccentInput, seating editor, events
   theme/        tokens.css (colours/fonts from the design), base.css (global classes like .card, .btn, .in)
-  lib/ hooks/   time/LAN-day helpers, layout tier, kiosk, SSE
+  lib/ hooks/   accent markup, WLAN QR payload, time/LAN-day helpers, layout tier, kiosk, SSE
 ```
 
 ## Adding a Nerd Stats widget

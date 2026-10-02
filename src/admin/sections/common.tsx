@@ -2,15 +2,38 @@ import type { ReactNode } from 'react';
 import { Icon } from '../../components/Icon';
 import { fromLocalInput, toLocalInput } from '../../lib/time';
 
-export function Section({ id, title, action, children }: { id: string; title: ReactNode; action?: ReactNode; children: ReactNode }) {
+export function Section({ id, title, action, children, wide }: { id: string; title: ReactNode; action?: ReactNode; children: ReactNode; wide?: boolean }) {
   return (
-    <section id={id} className="card admin-section">
+    <section id={id} className={'card admin-section' + (wide ? ' admin-section--wide' : '')}>
       <div className="card-head">
-        <h2 className="h">{title}</h2>
+        <h2 className="card-title">{title}</h2>
         {action}
       </div>
       {children}
     </section>
+  );
+}
+
+/** Compact on/off switch with its state text, e.g. "Sichtbar". */
+export function Switch({ checked, onChange, label, text }: { checked: boolean; onChange: (v: boolean) => void; label: string; text?: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} aria-label={label} className="switch" onClick={() => onChange(!checked)}>
+      {text}
+      <span className="switch__track" />
+    </button>
+  );
+}
+
+/** Full-width switch row with title and description (seat rules etc.). */
+export function SwitchRow({ checked, onChange, title, on, off }: { checked: boolean; onChange: (v: boolean) => void; title: string; on: string; off: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} className="switch-row" onClick={() => onChange(!checked)}>
+      <span className="switch-row__text">
+        <strong>{title}</strong>
+        <span>{checked ? on : off}</span>
+      </span>
+      <span className="switch__track" />
+    </button>
   );
 }
 

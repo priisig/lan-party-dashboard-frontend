@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
-import type { AdminPrincipal, EventView } from '../api/types';
+import type { EventView, Me } from '../api/types';
 
 export interface AdminContextValue {
-  me: AdminPrincipal;
+  me: Me;
   events: EventView[];
   /** The event being edited – defaults to the active one, admins can switch to prepare next year. */
   event: EventView;

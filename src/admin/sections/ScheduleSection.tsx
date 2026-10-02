@@ -43,7 +43,7 @@ export function ScheduleSection() {
     );
 
   return (
-    <Section id="zeitplan" title="Zeitplan" action={<AddButton label="Programmpunkt" onClick={add} />}>
+    <Section id="timetable" title="Timetable" wide action={<AddButton label="Programmpunkt" onClick={add} />}>
       <p className="small muted no-margin">Zeiten vor 06:00 gehören zum Vortag («Sa 01:00» = Nacht von Samstag auf Sonntag). Ende leer = bis zum nächsten Punkt.</p>
       <div className="sched-edit">
         {draft.length === 0 && <p className="empty">Noch keine Programmpunkte.</p>}

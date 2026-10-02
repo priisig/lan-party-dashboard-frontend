@@ -1,406 +1,569 @@
-/* Overview / main screen. Wall: three columns like the prototype; laptop: two; mobile: one. */
+/* Overview: scrolling website (prototype "Startseite"); .overview--kiosk is the fit-to-screen beamer grid. */
 .overview {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1.15fr);
-  grid-template-areas: 'left center right';
+  gap: 3.5rem;
 }
-.ov-col {
+.ov-section {
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
-  min-height: 0;
-  min-width: 0;
+  gap: 1.25rem;
+  scroll-margin-top: 6rem;
 }
-.ov-col--left {
-  grid-area: left;
-}
-.ov-col--center {
-  grid-area: center;
-}
-.ov-col--right {
-  grid-area: right;
+#netzwerk {
+  scroll-margin-top: 6rem;
 }
 
-/* -------- welcome / infos */
+/* ------------------------------------------------------------------ hero */
+.ov-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+}
 .ov-welcome {
-  background: linear-gradient(160deg, var(--gradient-start) 0%, var(--surface) 70%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
 }
 .ov-welcome__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 3.5rem;
+  line-height: 1.02;
   font-weight: 700;
-  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 .ov-welcome__text {
   margin: 0;
-  font-size: 1.0625rem;
-  line-height: 1.55;
-  color: var(--text-soft);
-}
-.ov-infos {
-  flex-grow: 1;
-}
-.ov-infos__list {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-.ov-infos__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding-bottom: 0.875rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.ov-infos__item:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-.ov-infos__item dt {
-  font-size: 0.875rem;
   color: var(--text-muted);
-}
-.ov-infos__item dd {
-  margin: 0;
   font-size: 1.125rem;
-  overflow-wrap: anywhere;
+  max-width: 35rem;
+}
+.ov-welcome__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.ov-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 35rem;
+  margin-top: 0.5rem;
 }
 
-/* -------- now / next */
 .ov-now {
-  flex-direction: row;
-  align-items: stretch;
-  gap: 1.5rem;
+  gap: 1rem;
 }
-.ov-now__main {
-  flex-grow: 1;
+.ov-now__live {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-width: 0;
+  gap: 0.625rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-accent);
+  border: 1px solid var(--border-accent);
+}
+.ov-now__live--idle {
+  background: var(--surface-raised);
+  border-color: var(--border);
+}
+.ov-now__live .chip {
+  align-self: flex-start;
 }
 .ov-now__title {
-  margin: 0;
   font-family: var(--font-display);
+  font-size: 1.75rem;
   font-weight: 700;
-  font-size: 2.25rem;
-  line-height: 1.05;
-}
-.ov-now__sub {
-  margin: 0;
-  font-size: 1.0625rem;
-  color: var(--text-soft);
+  line-height: 1.1;
 }
 .ov-now__bar {
   height: 0.5rem;
 }
-.ov-now__times {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-}
-.ov-now__divider {
-  width: 1px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-.ov-now__side {
-  width: 15rem;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.ov-now__next {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-.ov-now__next-title {
-  font-size: 1.375rem;
-  font-weight: 600;
-}
-.ov-now__next-time {
-  font-size: 1.0625rem;
-  color: var(--link);
-}
-
-/* -------- schedule */
-.ov-schedule {
-  flex-grow: 1;
-}
-.segmented {
-  display: flex;
-  gap: 0.25rem;
-  background: var(--surface-sunken);
-  padding: 0.25rem;
-  border-radius: var(--radius);
-}
-.segmented__btn {
-  border: 0;
-  cursor: pointer;
-  font-weight: 600;
+.ov-now__link {
+  font-weight: 500;
   font-size: 0.9375rem;
-  min-height: 2.25rem;
-  min-width: 4rem;
-  padding: 0 0.75rem;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
 }
-.segmented__btn.is-on {
-  background: var(--purple);
-  color: #fff;
-}
-.sched {
+.ov-next {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  flex-grow: 1;
+  gap: 0.25rem;
 }
-.sched__body {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  min-height: 0;
-}
-.sched__row {
-  display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr) 9rem 8.5rem;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.6875rem 0.75rem;
-  border-radius: var(--radius);
-}
-.sched__row--head {
-  padding: 0 0.75rem 0.5rem;
+.ov-next__label {
   font-size: 0.8125rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-.sched__row--done {
-  opacity: 0.6;
-}
-.sched__row--live {
-  background: var(--surface-active);
-  box-shadow: inset 0 0 0 1px var(--purple);
-}
-.sched__time {
-  font-size: 1.125rem;
+  color: var(--text-faint);
   font-weight: 600;
+  letter-spacing: 0.08em;
 }
-.sched__title {
+.ov-next__row {
   display: flex;
+  gap: 0.875rem;
   align-items: center;
-  gap: 0.75rem;
+  padding: 0.625rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.ov-next__row:hover {
+  background: var(--row-hover);
+}
+.ov-next__time {
+  color: var(--blue-text);
+  width: 3.25rem;
+  flex-shrink: 0;
+}
+.ov-next__title {
+  flex-grow: 1;
   min-width: 0;
 }
-.sched__color {
-  width: 0.25rem;
-  height: 1.5rem;
-  border-radius: 2px;
-  flex-shrink: 0;
+
+/* ------------------------------------------------------------------ cards row */
+.ov-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
 }
-.sched__text {
-  font-size: 1.125rem;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ov-card {
+  gap: 1.125rem;
 }
-.sched__where {
-  font-size: 0.9375rem;
-  color: var(--text-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.ov-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ov-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.ov-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  color: var(--text-muted);
+}
+.ov-checks li {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+}
+.ov-checks svg {
+  color: var(--green);
+}
+.ov-profile {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.ov-profile__name {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+.ov-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.ov-facts > div {
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  min-width: 0;
+}
+.ov-facts dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.ov-facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-/* -------- servers */
+.ov-wifi {
+  display: flex;
+  gap: 1.125rem;
+  align-items: center;
+}
+.ov-wifi__qr {
+  width: 8.5rem;
+  height: 8.5rem;
+}
+.ov-wifi__facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.ov-wifi__facts dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.ov-wifi__facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.ov-lan {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ov-lan__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.ov-lan__grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.375rem 1rem;
+  font-size: 0.875rem;
+}
+.ov-lan__grid dt {
+  color: var(--text-muted);
+}
+.ov-lan__grid dd {
+  margin: 0;
+}
+.ov-infos {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ov-infos > div {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ov-infos > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.ov-infos dt {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.ov-infos dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ tables (servers, schedule) */
+.ov-table-card {
+  position: relative;
+  padding: 0;
+  overflow-x: auto;
+  gap: 0;
+}
+.ov-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 44rem;
+}
+.ov-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.ov-table td {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.ov-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.ov-table tbody tr:hover {
+  background: var(--row-hover);
+}
+.ov-table__name {
+  font-weight: 600;
+}
+.ov-table__addr {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.ov-table__action {
+  text-align: right;
+}
+.ov-players {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.ov-players .mono {
+  font-size: 0.875rem;
+  min-width: 3.25rem;
+}
+.ov-players__bar {
+  width: 5rem;
+}
+
+.ov-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ov-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.ov-legend__box {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 3px;
+}
+.ov-sched {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ov-sched .empty {
+  padding: 1.25rem;
+}
+.ov-sched__row {
+  display: grid;
+  grid-template-columns: 5.5rem 1rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ov-sched__row:last-child {
+  border-bottom: 0;
+}
+.ov-sched__row:hover {
+  background: var(--row-hover);
+}
+.ov-sched__row--live {
+  background: #141024;
+}
+.ov-sched__row--done {
+  opacity: 0.55;
+}
+.ov-sched__time {
+  font-size: 0.875rem;
+  color: var(--blue-text);
+}
+.ov-sched__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+}
+.ov-sched__title {
+  font-weight: 600;
+}
+.ov-sched__tags {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------ tournaments */
+.ov-tournaments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+.ov-tournament {
+  color: var(--text);
+  text-decoration: none;
+  gap: 0.875rem;
+}
+.ov-tournament:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.ov-tournament__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ov-tournament__format {
+  margin-top: -0.5rem;
+}
+.ov-tournament__name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.ov-tournament__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: auto;
+}
+
+/* ------------------------------------------------------------------ seating teaser */
+.ov-seating {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.75rem;
+  border-radius: var(--radius-xl);
+}
+.ov-seating__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.ov-seating__map {
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  min-width: 0;
+  max-height: 26rem;
+}
+
+/* ------------------------------------------------------------------ compact server list (kiosk) */
 .srv {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  overflow: auto;
+  min-height: 0;
 }
 .srv__item {
   display: grid;
-  grid-template-columns: 0.625rem minmax(0, 1fr) auto;
-  gap: 0.875rem;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
-  padding: 0.625rem 0.875rem;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
+  gap: 0.75rem;
+  padding: 0.625rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
-.srv__link {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  text-decoration: none;
-  color: var(--text);
-  min-width: 0;
-}
-a.srv__link:hover .srv__name {
-  text-decoration: underline;
+.srv__item:last-child {
+  border-bottom: 0;
 }
 .srv__name {
-  font-size: 1.0625rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .srv__addr {
-  font-size: 0.9375rem;
-  color: var(--link);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 .srv__players {
+  font-size: 0.875rem;
+  color: var(--blue-text);
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ kiosk / beamer */
+.overview--kiosk {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
+}
+.ovk-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-height: 0;
+  min-width: 0;
+}
+.overview--kiosk .ov-welcome {
+  padding: 1.5rem;
+  gap: 1rem;
+}
+.overview--kiosk .ov-welcome__title {
+  font-size: 2.5rem;
+}
+.overview--kiosk .ov-welcome__text {
   font-size: 1rem;
 }
-.srv__players.is-off {
-  color: var(--text-dim);
+.overview--kiosk .ov-stats .v {
+  font-size: 1.75rem;
+}
+.overview--kiosk .ov-sched-card {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 1.25rem 0 0;
+}
+.overview--kiosk .ov-sched-card .card-head {
+  padding: 0 1.25rem;
+}
+.overview--kiosk .ov-sched {
+  overflow: auto;
+  min-height: 0;
+}
+.overview--kiosk .ov-servers-compact {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+.overview--kiosk .ov-seat-compact {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.overview--kiosk .ov-network {
+  flex-shrink: 0;
 }
 
-/* -------- sign-up */
-.ov-signup {
-  flex-grow: 1;
-}
-.signup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-.signup__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 1.0625rem;
-}
-.signup__name {
-  font-weight: 600;
-}
-.ov-signup__btn {
-  margin-top: auto;
-}
-
-/* -------- seats */
-.ov-seats {
-  flex-direction: row;
-  align-items: center;
-  gap: 1.25rem;
-}
-.ov-seats__text {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.ov-seats__count {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: var(--font-display);
-}
-
-/* ================================================================== laptop */
-html[data-tier='laptop'] .overview {
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas:
-    'center right'
-    'left right';
-  align-items: start;
-}
-html[data-tier='laptop'] .ov-col--left {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
-}
-html[data-tier='laptop'] .ov-now__title {
-  font-size: 1.875rem;
-}
-html[data-tier='laptop'] .ov-now__side {
-  width: 13rem;
-}
-html[data-tier='laptop'] .sched__row {
-  grid-template-columns: 4.5rem minmax(0, 1fr) 7rem 7.5rem;
-  gap: 0.75rem;
-}
-
-/* ================================================================== mobile */
+/* ------------------------------------------------------------------ small screens */
 html[data-tier='mobile'] .overview {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    'center'
-    'right'
-    'left';
-}
-html[data-tier='mobile'] .ov-now {
-  flex-direction: column;
-  gap: 1rem;
-}
-html[data-tier='mobile'] .ov-now__divider {
-  width: auto;
-  height: 1px;
-}
-html[data-tier='mobile'] .ov-now__side {
-  width: auto;
-}
-html[data-tier='mobile'] .ov-now__title {
-  font-size: 1.625rem;
+  gap: 2.25rem;
 }
 html[data-tier='mobile'] .ov-welcome__title {
-  font-size: 1.375rem;
+  font-size: 2.375rem;
 }
-html[data-tier='mobile'] .sched__row--head {
-  display: none;
-}
-html[data-tier='mobile'] .sched__row {
-  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
-  grid-template-areas:
-    'time title status'
-    '. where where';
-  row-gap: 0.125rem;
-  column-gap: 0.625rem;
-  padding: 0.625rem 0.5rem;
-}
-html[data-tier='mobile'] .sched__time {
-  grid-area: time;
+html[data-tier='mobile'] .ov-welcome__text {
   font-size: 1rem;
 }
-html[data-tier='mobile'] .sched__title {
-  grid-area: title;
+html[data-tier='mobile'] .ov-hero,
+html[data-tier='mobile'] .ov-cards,
+html[data-tier='mobile'] .ov-seating {
+  grid-template-columns: minmax(0, 1fr);
 }
-html[data-tier='mobile'] .sched__text {
-  font-size: 1rem;
-  white-space: normal;
+html[data-tier='mobile'] .ov-stats .v {
+  font-size: 1.5rem;
 }
-html[data-tier='mobile'] .sched__where {
-  grid-area: where;
-  font-size: 0.8125rem;
-  padding-left: 1rem;
+html[data-tier='mobile'] .ov-wifi__qr {
+  width: 7rem;
+  height: 7rem;
 }
-html[data-tier='mobile'] .sched__where:empty {
+html[data-tier='mobile'] .ov-sched__row {
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+html[data-tier='mobile'] .ov-sched__dot {
   display: none;
 }
-html[data-tier='mobile'] .sched__status {
-  grid-area: status;
+html[data-tier='mobile'] .ov-seating {
+  padding: 1.25rem;
 }
-html[data-tier='mobile'] .sched__status .chip {
-  font-size: 0.75rem;
-  padding: 0.1875rem 0.5rem;
-}
-html[data-tier='mobile'] .chip--plan {
-  display: none;
-}
-html[data-tier='mobile'] .ov-seats {
-  flex-wrap: wrap;
+html[data-tier='laptop'] .overview--kiosk,
+html[data-tier='mobile'] .overview--kiosk {
+  grid-template-columns: minmax(0, 1fr);
 }

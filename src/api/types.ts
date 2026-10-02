@@ -27,6 +27,35 @@ export interface EventView {
   logoUrl: string | null;
   kioskIntervalSec: number;
   kioskViews: string;
+  loginHeadline: string | null;
+  /** Section heading overrides (may contain {farbe:Wort} markup). */
+  headings: Partial<Record<HeadingKey, string>>;
+  network: NetworkDto;
+  seatRules: SeatRulesDto;
+}
+
+export type HeadingKey = 'servers' | 'schedule' | 'tournaments' | 'seating' | 'network';
+
+export type WifiSecurity = 'WPA' | 'WPA3' | 'OPEN';
+
+export interface NetworkDto {
+  wifiSsid: string | null;
+  wifiPassword: string | null;
+  wifiSecurity: WifiSecurity;
+  wifiHidden: boolean;
+  lanIpMode: string | null;
+  lanSubnet: string | null;
+  lanGateway: string | null;
+  tsAddress: string | null;
+  tsPort: number | null;
+  tsPassword: string | null;
+}
+
+export interface SeatRulesDto {
+  selectionOpen: boolean;
+  changeAllowed: boolean;
+  approvalRequired: boolean;
+  info: string | null;
 }
 
 export interface InfoItem {
@@ -40,9 +69,12 @@ export interface EventInfo {
   serverTime: string;
 }
 
+export type BannerTone = 'LIVE' | 'INFO' | 'WARNING';
+
 export interface Banner {
   id: string;
   kind: 'MANUAL' | 'REGISTRATION_CLOSING';
+  tone: BannerTone;
   text: string;
   countdownTo: string | null;
 }
@@ -145,11 +177,56 @@ export interface TournamentDetail {
 }
 
 export interface RegistrationRequest {
-  gamertag: string;
   teamName?: string;
   teammates?: string;
-  seatLabel?: string;
   rulesAccepted: boolean;
+}
+
+// ---------------------------------------------------------------- accounts
+
+export type UserRole = 'USER' | 'ORGA';
+
+export interface Me {
+  id: number;
+  nickname: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface RegisterRequest {
+  nickname: string;
+  email: string;
+  password: string;
+  rulesAccepted: boolean;
+}
+
+export interface Profile {
+  nickname: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  steam: string | null;
+  discord: string | null;
+  team: string | null;
+  favouriteGame: string | null;
+  showOnSeatmap: boolean;
+}
+
+export interface MyTournament {
+  tournamentId: number;
+  name: string;
+  color: string;
+  teamName: string | null;
+  statusText: string;
+}
+
+export interface MyEvent {
+  seat: string | null;
+  seatPending: string | null;
+  paid: boolean;
+  checkedIn: boolean;
+  tournaments: MyTournament[];
+  lanCount: number;
 }
 
 export type SeatStatus = 'FREE' | 'TAKEN' | 'BLOCKED';
@@ -208,14 +285,10 @@ export interface StatsView {
 
 // ---------------------------------------------------------------- admin
 
-export interface AdminPrincipal {
-  id: number;
-  name: string;
-}
-
 export interface AnnouncementDto {
   id?: number | null;
   text: string;
+  kind: BannerTone;
   enabled: boolean;
   startsAt: string | null;
   endsAt: string | null;
@@ -321,15 +394,31 @@ export interface SettingsView {
   pushToken: string;
 }
 
-export interface AdminUser {
+export interface AdminUserView {
   id: number;
-  name: string;
-  codeHint: string;
+  nickname: string;
+  email: string;
+  role: UserRole;
+  enabled: boolean;
+  firstName: string | null;
+  lastName: string | null;
+  createdAt: string;
+  participant: boolean;
+  seat: string | null;
+  paid: boolean;
+  checkedIn: boolean;
 }
 
-export interface AdminWithCode {
-  admin: AdminUser;
-  code: string;
+export interface AdminOverview {
+  participants: number;
+  checkedIn: number;
+  paymentOpen: number;
+  seatsTaken: number;
+  seatsCapacity: number;
+  pendingRequests: number;
+  liveTournaments: number;
+  serversOnline: number;
+  serversTotal: number;
 }
 
 export interface PendingRequest {
@@ -365,6 +454,8 @@ export interface EventRequest {
   welcomeText: string | null;
   kioskIntervalSec: number;
   kioskViews: string;
+  loginHeadline: string | null;
+  headings: Partial<Record<HeadingKey, string>>;
 }
 
 export interface CreateEventRequest {

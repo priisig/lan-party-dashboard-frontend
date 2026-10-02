@@ -6,9 +6,11 @@ import { useKiosk } from './hooks/useKiosk';
 import { useLayoutTier } from './hooks/useLayoutTier';
 import { PublicLayout } from './layout/PublicLayout';
 import { LayoutContext } from './layout/TierContext';
+import { AuthPage } from './pages/AuthPage';
 import { NerdStatsPage } from './pages/NerdStatsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OverviewPage } from './pages/OverviewPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { SeatingPage } from './pages/SeatingPage';
 import { TournamentsPage } from './pages/TournamentsPage';
 
@@ -43,7 +45,10 @@ function Shell() {
           <Route path="turniere" element={<TournamentsPage />} />
           <Route path="sitzplan" element={<SeatingPage />} />
           <Route path="stats" element={<NerdStatsPage />} />
+          <Route path="profil" element={<ProfilePage />} />
         </Route>
+        <Route path="login" element={<AuthPage mode="login" />} />
+        <Route path="registrieren" element={<AuthPage mode="register" />} />
         <Route
           path="admin/*"
           element={

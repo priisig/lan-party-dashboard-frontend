@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { useMe, useMyEvent } from '../api/auth';
 import { useEventInfo } from '../api/queries';
+import { AccentText } from '../components/AccentText';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { Logo } from '../components/Logo';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { stripAccent } from '../lib/accent';
 import { AnnouncementBar } from './AnnouncementBar';
 import { Clock } from './Clock';
 import { LiveTag } from './LiveTag';
 import { useLayout } from './TierContext';
-import { VIEWS } from './views';
+import { NAV_LINKS, VIEWS } from './views';
 import './layout.css';
 
 export function PublicLayout() {
@@ -16,7 +20,7 @@ export function PublicLayout() {
   const { tier, kiosk } = useLayout();
   const event = data?.event;
   const timeZone = event?.timezone ?? 'Europe/Zurich';
-  useDocumentTitle(event?.title);
+  useDocumentTitle(event ? stripAccent(event.title) : undefined);
 
   if (error && !data) {
     return (
@@ -34,30 +38,22 @@ export function PublicLayout() {
   return (
     <div className="shell">
       <header className="header">
-        <Link to="/" className="header__brand">
-          <Logo src={event?.logoUrl} className="header__logo" />
-          <div className="header__titles">
-            <h1 className="header__title">{event?.title ?? ' '}</h1>
-            {event?.subtitle && <span className="header__subtitle">{event.subtitle}</span>}
-          </div>
-        </Link>
-        {tier !== 'mobile' && (
-          <nav aria-label="Ansichten" className="header__nav">
-            {VIEWS.map((v) => (
-              <NavLink key={v.key} to={v.path} end className="tab">
-                {v.label}
-              </NavLink>
-            ))}
-          </nav>
-        )}
-        <div className="header__right">
-          {tier !== 'mobile' && <LiveTag />}
-          <Clock timeZone={timeZone} />
-          {!kiosk && (
-            <Link to="/admin" className="tab header__admin" aria-label="Admin-Bereich">
-              <Icon name="lock" size="1.375rem" />
-            </Link>
+        <div className="header__inner">
+          <Link to="/" className="header__brand">
+            <Logo src={event?.logoUrl} className="header__logo" />
+            <span className="header__title">{event ? <AccentText text={event.title} /> : ' '}</span>
+          </Link>
+          {tier !== 'mobile' && (
+            <nav aria-label="Hauptnavigation" className="header__nav">
+              {NAV_LINKS.map((v) => (
+                <NavItem key={v.label} to={v.to} label={v.label} />
+              ))}
+            </nav>
           )}
+          <div className="header__right">
+            {tier !== 'mobile' && <LiveTag />}
+            {kiosk ? <Clock timeZone={timeZone} /> : <AccountPill compact={tier === 'mobile'} />}
+          </div>
         </div>
       </header>
       {kiosk && event && <KioskRotation views={event.kioskViews} intervalSec={event.kioskIntervalSec} />}
@@ -66,8 +62,9 @@ export function PublicLayout() {
           <LiveTag />
         </div>
       )}
-      <AnnouncementBar />
+      <AnnouncementBar dismissible={!kiosk} />
       <Outlet />
+      {!kiosk && <Footer />}
       {tier === 'mobile' && (
         <nav aria-label="Ansichten" className="bottom-nav">
           {VIEWS.map((v) => (
@@ -76,9 +73,75 @@ export function PublicLayout() {
               <span>{v.short}</span>
             </NavLink>
           ))}
+          <ProfileTab />
         </nav>
       )}
     </div>
+  );
+}
+
+/** Nav link that also handles "/#programm" style anchors on the overview. */
+function NavItem({ to, label }: { to: string; label: string }) {
+  const location = useLocation();
+  if (to.includes('#')) {
+    const hash = to.slice(to.indexOf('#'));
+    const active = location.pathname === '/' && location.hash === hash;
+    return (
+      <Link to={to} className={'tab' + (active ? ' active' : '')}>
+        {label}
+      </Link>
+    );
+  }
+  const exactOverview = to === '/' && location.hash !== '';
+  return (
+    <NavLink to={to} end className={({ isActive }) => 'tab' + (isActive && !exactOverview ? ' active' : '')}>
+      {label}
+    </NavLink>
+  );
+}
+
+function AccountPill({ compact }: { compact: boolean }) {
+  const me = useMe();
+  const my = useMyEvent(!!me.data);
+  if (me.isPending) return <span className="account-pill account-pill--placeholder" />;
+  if (!me.data) {
+    return (
+      <Link to="/login" className="btn btn--primary btn--sm">
+        Anmelden
+      </Link>
+    );
+  }
+  const seat = my.data?.seat;
+  return (
+    <Link to="/profil" className="account-pill" aria-label={`Profil von ${me.data.nickname}`}>
+      <Avatar nickname={me.data.nickname} />
+      {!compact && <span className="account-pill__name">{me.data.nickname}</span>}
+      {seat && <span className="account-pill__seat mono">{seat}</span>}
+    </Link>
+  );
+}
+
+function ProfileTab() {
+  const me = useMe();
+  return (
+    <NavLink to={me.data ? '/profil' : '/login'} className="bottom-nav__item">
+      <Icon name="user" size="1.5rem" />
+      <span>{me.data ? 'Profil' : 'Login'}</span>
+    </NavLink>
+  );
+}
+
+function Footer() {
+  const me = useMe();
+  const { data } = useEventInfo();
+  const event = data?.event;
+  return (
+    <footer className="footer">
+      <div className="footer__inner">
+        <span>{event ? [stripAccent(event.title), event.location].filter(Boolean).join(' · ') : ''}</span>
+        {me.data?.role === 'ORGA' && <Link to="/admin">Admin-Bereich</Link>}
+      </div>
+    </footer>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { setServerTime } from '../lib/time';
 import type {
@@ -6,7 +6,6 @@ import type {
   EventInfo,
   LiveTag,
   PublicServer,
-  RegistrationRequest,
   ScheduleView,
   SeatMapView,
   StatsView,
@@ -37,8 +36,8 @@ export const topicKeys: Record<string, readonly (readonly unknown[])[]> = {
   banners: [keys.banners],
   schedule: [keys.schedule, keys.live],
   servers: [keys.servers],
-  tournaments: [keys.tournaments, ['tournament'], keys.live, keys.banners],
-  seats: [keys.seats],
+  tournaments: [keys.tournaments, ['tournament'], keys.live, keys.banners, ['auth', 'my-event']],
+  seats: [keys.seats, ['auth', 'my-event']],
   stats: [keys.stats],
 };
 
@@ -85,24 +84,3 @@ export const useSeats = () =>
 
 export const useStats = () =>
   useQuery({ queryKey: keys.stats, queryFn: () => api.get<StatsView>('/api/public/stats'), refetchInterval: FALLBACK });
-
-export function useRegister(tournamentId: number | null) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (body: RegistrationRequest) =>
-      api.post<TournamentDetail>(`/api/public/tournaments/${tournamentId}/registrations`, body),
-    onSuccess: (detail) => {
-      client.setQueryData(keys.tournament(detail.summary.id), detail);
-      client.invalidateQueries({ queryKey: keys.tournaments });
-    },
-  });
-}
-
-export function useRequestSeat() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: ({ label, gamertag, companions }: { label: string; gamertag: string; companions?: string }) =>
-      api.post<SeatMapView>(`/api/public/seats/${encodeURIComponent(label)}/requests`, { gamertag, companions }),
-    onSuccess: (map) => client.setQueryData(keys.seats, map),
-  });
-}

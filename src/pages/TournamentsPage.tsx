@@ -1,151 +1,245 @@
 import { type FormEvent, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router';
-import { useEventInfo, useRegister, useTournament, useTournaments } from '../api/queries';
+import { Link, useSearchParams } from 'react-router';
+import { useMe, useMyEvent, useTournamentSignup } from '../api/auth';
 import { errorMessage } from '../api/client';
-import type { TournamentDetail, TournamentStatusKind, TournamentSummary } from '../api/types';
+import { useEventInfo, useTournament, useTournaments } from '../api/queries';
+import type { TournamentDetail, TournamentSummary } from '../api/types';
+import { Avatar } from '../components/Avatar';
 import { BracketView } from '../components/bracket/BracketView';
 import { Icon } from '../components/Icon';
-import { formatTime } from '../lib/time';
-import { loadPref, savePref } from '../lib/storage';
+import { SectionHead } from '../components/SectionHead';
+import { useLayout } from '../layout/TierContext';
+import { formatDateTime, formatTime } from '../lib/time';
+import { TOURNAMENT_CHIP } from './OverviewPage';
 import './tournaments.css';
-
-const STATUS_COLOR: Record<TournamentStatusKind, string> = {
-  LIVE: 'var(--green-text)',
-  OPEN: 'var(--blue-text)',
-  PLANNED: 'var(--text-muted)',
-  CLOSED: 'var(--text-muted)',
-  DONE: 'var(--text-dim)',
-};
 
 export function TournamentsPage() {
   const { data: list } = useTournaments();
+  const { data: info } = useEventInfo();
+  const { kiosk } = useLayout();
   const [params, setParams] = useSearchParams();
   const requested = Number(params.get('t')) || null;
   const fallback = list?.find((t) => t.statusKind === 'LIVE') ?? list?.[0];
   const selectedId = list?.some((t) => t.id === requested) ? requested : (fallback?.id ?? null);
   const { data: detail } = useTournament(selectedId);
-
   const select = (id: number) => setParams({ t: String(id) }, { replace: true });
+  const title = info?.event.headings?.tournaments || 'Turniere';
+
+  const tabs = (
+    <div role="tablist" aria-label="Turnier wählen" className="tn-tabs">
+      {(list ?? []).map((t) => (
+        <button key={t.id} role="tab" aria-selected={t.id === selectedId} className={'tn-tab' + (t.id === selectedId ? ' is-on' : '')} onClick={() => select(t.id)}>
+          <span className="tn-tab__color" style={{ background: t.color }} />
+          {t.name}
+          <span className={'chip ' + TOURNAMENT_CHIP[t.statusKind]}>{t.statusText}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   if (list && list.length === 0) {
     return (
-      <main className="page">
-        <section className="card">
-          <h2 className="h">Turniere</h2>
-          <p className="empty">Für diesen Event sind noch keine Turniere eingetragen.</p>
-        </section>
+      <main className="site-page">
+        <SectionHead eyebrow="COMPETE" title={title} as="h1" />
+        <p className="empty">Für diesen Event sind noch keine Turniere eingetragen.</p>
+      </main>
+    );
+  }
+
+  if (kiosk) {
+    return (
+      <main className="page tournaments--kiosk">
+        {tabs}
+        <section className="card tn-bracket">{detail ? <BracketPanel detail={detail} /> : <p className="empty">Lade …</p>}</section>
       </main>
     );
   }
 
   return (
-    <main className="page tournaments">
-      <nav aria-label="Turniere" className="card tn-list">
-        <h2 className="h tn-list__title">Turniere</h2>
-        <div className="tn-list__items">
-          {(list ?? []).map((t) => (
-            <button
-              key={t.id}
-              className={'tn-item' + (t.id === selectedId ? ' is-on' : '')}
-              aria-current={t.id === selectedId}
-              onClick={() => select(t.id)}
-            >
-              <span className="tn-item__name">
-                <span className="tn-item__color" style={{ background: t.color }} />
-                {t.name}
-              </span>
-              <span className="tn-item__status" style={{ color: STATUS_COLOR[t.statusKind] }}>
-                {t.statusText}
-              </span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <section className="card tn-bracket">{detail ? <BracketPanel detail={detail} /> : <p className="empty">Lade …</p>}</section>
-
-      <section className="card tn-side">
-        <RegistrationForm tournaments={list ?? []} preferredId={selectedId} />
-        {detail && <Participants detail={detail} />}
+    <main className="site-page tournaments">
+      <SectionHead eyebrow="COMPETE" title={title} as="h1" />
+      {tabs}
+      {detail && <InfoTiles detail={detail} />}
+      <section aria-labelledby="baum" className="card tn-bracket">
+        {detail ? <BracketPanel detail={detail} /> : <p className="empty">Lade …</p>}
       </section>
+      {detail && <Participants detail={detail} />}
     </main>
+  );
+}
+
+function InfoTiles({ detail }: { detail: TournamentDetail }) {
+  const { data: info } = useEventInfo();
+  const t = detail.summary;
+  const tz = info?.event.timezone ?? 'Europe/Zurich';
+  const tiles = [
+    ['Modus', t.formatLabel ?? (t.teamSize > 1 ? `${t.teamSize}er-Teams` : '1 gegen 1')],
+    ['Start', t.startsAt ? formatDateTime(t.startsAt, tz) : 'offen'],
+    ['Ort / Server', t.serverName ?? '–'],
+    ['Teilnehmende', `${detail.participants.length} / ${t.maxParticipants}${t.teamSize > 1 ? ' Teams' : ''}`],
+    ['Anmeldeschluss', t.registrationClosesAt ? formatDateTime(t.registrationClosesAt, tz) : t.acceptsRegistrations ? 'offen' : 'geschlossen'],
+  ];
+  return (
+    <div className="tn-tiles">
+      {tiles.map(([k, v]) => (
+        <div key={k} className="tile">
+          <div className="k">{k}</div>
+          <div className="tn-tiles__v">{v}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
 function BracketPanel({ detail }: { detail: TournamentDetail }) {
   const { data: info } = useEventInfo();
   const t = detail.summary;
-  const meta = [t.formatLabel, t.serverName ? `Server ${t.serverName}` : null].filter(Boolean).join(' · ');
   return (
     <>
-      <div className="tn-head">
-        <div className="tn-head__text">
-          <h2 className="display tn-head__name">{t.name}</h2>
-          {meta && <span className="soft">{meta}</span>}
+      <div className="card-head">
+        <h2 id="baum" className="card-title">
+          Turnierbaum · {t.name}
+        </h2>
+        <div className="tn-bracket__meta">
+          <span className="seat-legend">
+            <span>
+              <span className="seat-legend__box" style={{ background: 'var(--green)' }} />
+              Sieger
+            </span>
+            <span>
+              <span className="seat-legend__box" style={{ border: '2px solid var(--purple)' }} />
+              Läuft gerade
+            </span>
+          </span>
+          {t.challongeUrl && (
+            <a href={t.challongeUrl} target="_blank" rel="noreferrer" className="btn btn--outline btn--sm">
+              Challonge <Icon name="external" size={16} />
+            </a>
+          )}
         </div>
-        {t.challongeUrl && (
-          <a href={t.challongeUrl} target="_blank" rel="noreferrer" className="btn btn--ghost">
-            Auf Challonge öffnen <Icon name="external" size={16} />
-          </a>
-        )}
       </div>
       <div className="tn-board">
         {detail.bracket && detail.bracket.rounds.length > 0 ? (
           <BracketView bracket={detail.bracket} />
         ) : (
           <div className="tn-board__empty">
+            <Icon name="trophy" size={36} />
             <p className="display">Turnierbaum folgt</p>
-            <p className="muted">
+            <p className="muted no-margin">
               {t.challongeUrl
                 ? 'Sobald das Turnier auf Challonge gestartet ist, erscheint hier der Baum.'
                 : t.acceptsRegistrations
-                  ? 'Melde dich rechts an – der Baum wird nach Anmeldeschluss erstellt.'
+                  ? 'Melde dich an – der Baum wird nach Anmeldeschluss erstellt.'
                   : 'Für dieses Turnier gibt es (noch) keinen Turnierbaum.'}
             </p>
           </div>
         )}
-        {detail.snapshotAt && info && (
-          <span className="tn-board__stamp">Challonge · aktualisiert automatisch · Stand {formatTime(detail.snapshotAt, info.event.timezone)}</span>
-        )}
+        {detail.snapshotAt && info && <span className="tn-board__stamp">Challonge · Stand {formatTime(detail.snapshotAt, info.event.timezone)}</span>}
       </div>
     </>
   );
 }
 
-function RegistrationForm({ tournaments, preferredId }: { tournaments: TournamentSummary[]; preferredId: number | null }) {
-  const open = tournaments.filter((t) => t.acceptsRegistrations);
-  const [chosen, setChosen] = useState<number | null>(null);
-  const tournamentId = chosen != null && open.some((t) => t.id === chosen) ? chosen : (open.find((t) => t.id === preferredId)?.id ?? open[0]?.id ?? null);
-  const tournament = open.find((t) => t.id === tournamentId) ?? null;
-  const register = useRegister(tournamentId);
+function Participants({ detail }: { detail: TournamentDetail }) {
+  const t = detail.summary;
+  const team = t.teamSize > 1;
+  return (
+    <section aria-labelledby="teams" className="tn-teams">
+      <div className="section-head">
+        <h2 id="teams" className="card-title tn-teams__title">
+          {team ? 'Angemeldete Teams' : 'Angemeldete Spieler'}{' '}
+          <span className="mono muted">
+            {detail.participants.length}/{t.maxParticipants}
+          </span>
+        </h2>
+      </div>
+      <SignupPanel tournament={t} />
+      {detail.participants.length === 0 ? (
+        <p className="empty">Noch niemand – sei die/der Erste!</p>
+      ) : (
+        <div className="tn-teams__grid">
+          {detail.participants.map((p, i) => (
+            <div key={p} className="card tn-team">
+              <Avatar nickname={p} />
+              <div className="tn-team__text">
+                <div className="tn-team__name">{p}</div>
+                <div className="small muted">Seed {i + 1}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
-  const [gamertag, setGamertag] = useState(() => loadPref('gamertag'));
+/** Sign-up for the logged-in user, or a login prompt. Shows "withdraw" when already registered. */
+function SignupPanel({ tournament }: { tournament: TournamentSummary }) {
+  const me = useMe();
+  const my = useMyEvent(!!me.data);
+  const signup = useTournamentSignup(tournament.id);
+  const { data: info } = useEventInfo();
+  const [open, setOpen] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [teammates, setTeammates] = useState('');
-  const [seat, setSeat] = useState(() => loadPref('seat'));
   const [rules, setRules] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const mine = my.data?.tournaments.find((x) => x.tournamentId === tournament.id) ?? null;
+  const team = tournament.teamSize > 1;
 
-  useEffect(() => setDone(null), [tournamentId]);
+  useEffect(() => {
+    setOpen(false);
+    setDone(null);
+  }, [tournament.id]);
 
-  if (open.length === 0) {
+  if (mine) {
     return (
-      <div className="tn-form">
-        <h2 className="h">Anmelden</h2>
-        <p className="empty">Zurzeit sind keine Anmeldungen offen.</p>
+      <div className="card tn-signup tn-signup--done">
+        <span>
+          <Icon name="check" size={18} /> Du bist angemeldet{mine.teamName ? ` mit Team «${mine.teamName}»` : ''}.
+        </span>
+        {signup.withdraw.error && <div className="error-box">{errorMessage(signup.withdraw.error)}</div>}
+        <button
+          type="button"
+          className="btn btn--danger btn--sm"
+          disabled={signup.withdraw.isPending}
+          onClick={() => window.confirm(`Anmeldung für ${tournament.name} zurückziehen?`) && signup.withdraw.mutate()}
+        >
+          Abmelden
+        </button>
+      </div>
+    );
+  }
+  if (!tournament.acceptsRegistrations) return done ? <div className="ok-box">{done}</div> : null;
+  if (!me.data) {
+    return (
+      <div className="card tn-signup">
+        <span className="muted">Für die Anmeldung brauchst du einen Account.</span>
+        <Link to={`/login?next=${encodeURIComponent(`/turniere?t=${tournament.id}`)}`} className="btn btn--primary">
+          Anmelden, um mitzuspielen
+        </Link>
+      </div>
+    );
+  }
+  if (!open) {
+    return (
+      <div className="tn-signup-cta">
+        <button type="button" className="btn btn--primary" onClick={() => setOpen(true)}>
+          {team ? 'Team anmelden' : 'Als Spieler anmelden'}
+        </button>
+        {tournament.registrationClosesAt && <span className="small muted">Anmeldeschluss {formatDateTime(tournament.registrationClosesAt, info?.event.timezone ?? 'Europe/Zurich')}</span>}
       </div>
     );
   }
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    register.mutate(
-      { gamertag, teamName: teamName || undefined, teammates: teammates || undefined, seatLabel: seat || undefined, rulesAccepted: rules },
+    signup.register.mutate(
+      { teamName: teamName || undefined, teammates: teammates || undefined, rulesAccepted: rules },
       {
         onSuccess: () => {
-          savePref('gamertag', gamertag);
-          savePref('seat', seat);
-          setDone(`${teamName || gamertag} ist für ${tournament?.name} angemeldet. GL & HF!`);
+          setDone(`${teamName || me.data!.nickname} ist für ${tournament.name} angemeldet. GL & HF!`);
+          setOpen(false);
           setTeamName('');
           setTeammates('');
           setRules(false);
@@ -154,47 +248,30 @@ function RegistrationForm({ tournaments, preferredId }: { tournaments: Tournamen
     );
   };
 
-  const team = (tournament?.teamSize ?? 1) > 1;
   return (
-    <form className="tn-form" onSubmit={submit}>
-      <h2 className="h">Anmelden</h2>
-      <label className="lbl">
-        Turnier
-        <select className="in" value={tournamentId ?? ''} onChange={(e) => setChosen(Number(e.target.value))}>
-          {open.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} · {t.registered}/{t.maxParticipants}
-              {t.teamSize > 1 ? ' Teams' : ''}
-            </option>
-          ))}
-        </select>
-      </label>
-      {tournament?.registrationClosesAt && <ClosingHint closesAt={tournament.registrationClosesAt} />}
-      <label className="lbl">
-        Gamertag
-        <input className="in" required maxLength={60} value={gamertag} onChange={(e) => setGamertag(e.target.value)} placeholder="z. B. xXSniperXx" />
-      </label>
+    <form className="card tn-signup-form" onSubmit={submit}>
+      <h3 className="card-title card-title--sm">{team ? 'Team anmelden' : 'Anmelden'} · {tournament.name}</h3>
+      <p className="small muted no-margin">
+        Du spielst als <strong>{me.data.nickname}</strong>
+        {my.data?.seat ? ` (Platz ${my.data.seat})` : ''}.
+      </p>
       {team && (
-        <>
+        <div className="form-grid">
           <label className="lbl">
             Teamname
             <input className="in" required maxLength={80} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Dein Team" />
           </label>
           <label className="lbl">
-            Mitspieler ({(tournament?.teamSize ?? 2) - 1})
-            <input className="in" maxLength={300} value={teammates} onChange={(e) => setTeammates(e.target.value)} placeholder="Gamertags, mit Komma getrennt" />
+            Mitspieler ({tournament.teamSize - 1})
+            <input className="in" maxLength={300} value={teammates} onChange={(e) => setTeammates(e.target.value)} placeholder="Nicknames, mit Komma getrennt" />
           </label>
-        </>
+        </div>
       )}
-      <label className="lbl">
-        Sitzplatz
-        <input className="in mono" maxLength={20} value={seat} onChange={(e) => setSeat(e.target.value.toUpperCase())} placeholder="z. B. A7" />
-      </label>
       <label className="check">
         <input type="checkbox" checked={rules} onChange={(e) => setRules(e.target.checked)} required />
         <span>
           Ich habe die{' '}
-          {tournament?.rulesUrl ? (
+          {tournament.rulesUrl ? (
             <a href={tournament.rulesUrl} target="_blank" rel="noreferrer">
               Turnierregeln
             </a>
@@ -204,42 +281,16 @@ function RegistrationForm({ tournaments, preferredId }: { tournaments: Tournamen
           gelesen
         </span>
       </label>
-      {register.error && <div className="error-box">{errorMessage(register.error)}</div>}
-      {done && <div className="ok-box">{done}</div>}
-      <button type="submit" className="btn btn--go tn-form__submit" disabled={register.isPending}>
-        {register.isPending ? 'Sende …' : 'Anmeldung absenden'}
-      </button>
+      {signup.register.error && <div className="error-box">{errorMessage(signup.register.error)}</div>}
+      <div className="row-actions">
+        <button type="button" className="btn btn--outline" onClick={() => setOpen(false)}>
+          Abbrechen
+        </button>
+        <button type="submit" className="btn btn--primary" disabled={signup.register.isPending}>
+          {signup.register.isPending ? 'Sende …' : 'Anmeldung absenden'}
+        </button>
+      </div>
     </form>
   );
 }
 
-function ClosingHint({ closesAt }: { closesAt: string }) {
-  const { data: info } = useEventInfo();
-  if (!info) return null;
-  return <p className="small muted tn-form__hint">Anmeldeschluss {formatTime(closesAt, info.event.timezone)} Uhr</p>;
-}
-
-function Participants({ detail }: { detail: TournamentDetail }) {
-  const t = detail.summary;
-  return (
-    <div className="tn-participants">
-      <div className="tn-participants__head">
-        <span className="h h--sm">Angemeldet · {t.name}</span>
-        <span className="mono muted">
-          {detail.participants.length}/{t.maxParticipants}
-        </span>
-      </div>
-      {detail.participants.length === 0 ? (
-        <p className="empty">Noch niemand – sei die/der Erste!</p>
-      ) : (
-        <div className="tn-participants__list">
-          {detail.participants.map((p) => (
-            <span key={p} className="pill">
-              {p}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}

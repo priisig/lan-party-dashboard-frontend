@@ -1,86 +1,134 @@
-.seating {
-  grid-template-columns: minmax(0, 1fr) 26rem;
+/* Seat reservation page (prototype "Sitzplatzwahl"). */
+.seating__intro {
+  max-width: 40rem;
+  margin-top: -0.75rem;
 }
-.seating__map {
-  min-height: 30rem;
-}
-.seating__side {
+.seating__search {
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
-  min-height: 0;
+  gap: 0.375rem;
+  min-width: 17.5rem;
+}
+.seating__search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.seating__search-box:focus-within {
+  border-color: var(--purple-strong);
+}
+.seating__search-box input {
+  flex-grow: 1;
+  min-height: 2.875rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  outline: none;
   min-width: 0;
 }
-.reserve__head {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-  flex-wrap: wrap;
-  font-size: 1.0625rem;
-}
-.reserve__label {
-  font-size: 3.5rem;
-  line-height: 1;
-}
-.reserve__form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.reserve__note {
-  margin: 0;
-}
-.seating__stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-.seating__stats .v {
-  font-size: 1.75rem;
-}
 .seat-results {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .seat-results__btn {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--text);
   cursor: pointer;
-  min-height: 2.75rem;
-  align-items: center;
-}
-.seat-results__btn:hover {
-  background: var(--surface-hover);
 }
 
-html[data-tier='laptop'] .seating {
-  grid-template-columns: minmax(0, 1fr) 21rem;
-  align-items: start;
+.seating__layout {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
-html[data-tier='laptop'] .seating__map {
-  min-height: 34rem;
+.seating__map {
+  flex: 1 1 40rem;
+  min-width: 0;
+  border-radius: var(--radius-xl);
+  overflow-x: auto;
 }
-html[data-tier='laptop'] .reserve__label,
-html[data-tier='mobile'] .reserve__label {
-  font-size: 2.5rem;
+.seating__map .seatmap {
+  min-height: 28rem;
 }
-html[data-tier='mobile'] .seating {
+.seating__side {
+  flex: 1 1 20rem;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.seating__side .card {
+  border-radius: var(--radius-xl);
+}
+.card-title--sm {
+  font-size: 1.125rem;
+}
+.card--selected {
+  border-color: var(--blue-strong);
+}
+
+.my-seat {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--green-surface);
+  border: 1px solid var(--green-border);
+}
+.my-seat__label {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1;
+}
+.my-seat--pending {
+  background: var(--orange-bg);
+  border-color: #5A3E16;
+}
+.my-seat--pending .my-seat__label {
+  color: var(--orange);
+}
+
+.seat-change {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  color: var(--text-muted);
+}
+.seat-change__old {
+  text-decoration: line-through;
+}
+.seat-change__new {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--blue-text);
+}
+
+/* Beamer: the map fills the screen. */
+.seating--kiosk {
   grid-template-columns: minmax(0, 1fr);
 }
-html[data-tier='mobile'] .seating__map {
-  min-height: 0;
-  padding: 1rem 0.75rem;
+.seating--kiosk .seating__map {
+  overflow: hidden;
 }
-html[data-tier='mobile'] .seating__map .seatmap[data-orientation='vertical'] .seatmap__seats {
-  grid-template-rows: repeat(var(--count), 3rem);
+
+html[data-tier='mobile'] .seating__side {
+  max-width: none;
+}
+html[data-tier='mobile'] .seating__search {
+  min-width: 0;
+  width: 100%;
+}
+html[data-tier='mobile'] .seating__map .seatmap {
+  min-height: 20rem;
 }

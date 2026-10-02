@@ -94,3 +94,15 @@ export function fromLocalInput(value: string, timeZone: string): string | null {
   }
   return new Date(utc).toISOString();
 }
+
+/** "Fr 16.10. – So 18.10.2026" (or one day when start and end fall on the same date). */
+export function formatDateRange(start: string, end: string, timeZone: string): string {
+  const day = (v: string, year: boolean) =>
+    fmt(timeZone, { weekday: 'short', day: '2-digit', month: '2-digit', ...(year ? { year: 'numeric' } : {}) })
+      .format(new Date(v))
+      .replace(/\.,/, '')
+      .replace(',', '');
+  const a = day(start, false);
+  const b = day(end, true);
+  return b.startsWith(a) ? b : `${a} – ${b}`;
+}

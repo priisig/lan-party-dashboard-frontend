@@ -76,7 +76,6 @@ function Edge({ side, markers }: { side: RoomSide; markers: RoomMarker[] }) {
         <div className="seatmap__tags">
           {tags.map((m, i) => (
             <span key={'t' + i} className={`seatmap__tag seatmap__tag--${m.align.toLowerCase()}` + (m.kind === 'ENTRANCE' ? ' seatmap__tag--entrance' : '')}>
-              {m.kind === 'ENTRANCE' && <span aria-hidden="true">⇥ </span>}
               {m.label}
             </span>
           ))}

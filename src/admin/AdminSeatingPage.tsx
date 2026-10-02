@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
 import { errorMessage } from '../api/client';
 import type { LayoutRequest, MarkerAlign, MarkerKind, RoomMarker, RoomSide, SeatMapView, SeatView } from '../api/types';
 import { Icon } from '../components/Icon';
 import { SeatLegend, SeatMap } from '../components/seatmap/SeatMap';
 import { useAdmin } from './AdminContext';
+import { AdminTopBar } from './AdminLayout';
 import { useSeatsAdmin } from './adminApi';
 import { useToast } from './Toast';
 import { RemoveButton } from './sections/common';
@@ -34,13 +34,8 @@ export function AdminSeatingPage() {
   };
 
   return (
-    <div className="admin-seating">
-      <header className="admin-seating__bar">
-        <Link to="/admin" className="btn btn--ghost btn--sm">
-          ← Verwaltung
-        </Link>
-        <h1 className="admin-seating__title">Sitzordnung</h1>
-        <span className="admin-badge">ADMIN</span>
+    <div className="admin-main admin-seating">
+      <AdminTopBar title="Saalplan-Editor" subtitle="Plätze zuweisen, sperren und das Layout des Raums festlegen">
         <div role="radiogroup" aria-label="Werkzeug" className="segmented admin-seating__tools">
           {TOOLS.map((t) => (
             <button key={t.key} role="radio" aria-checked={tool === t.key} className={'segmented__btn' + (tool === t.key ? ' is-on' : '')} onClick={() => setTool(t.key)}>
@@ -48,11 +43,11 @@ export function AdminSeatingPage() {
             </button>
           ))}
         </div>
-        <a href="/sitzplan" target="_blank" rel="noreferrer" className="btn btn--ghost btn--sm admin-seating__view">
+        <a href="/sitzplan" target="_blank" rel="noreferrer" className="btn btn--outline btn--sm">
           Ansehen <Icon name="external" size={16} />
         </a>
-      </header>
-      <main className="page admin-seating__main">
+      </AdminTopBar>
+      <div className="admin-seating__main">
         <section className="card" aria-label="Saalplan">
           <div className="card-head">
             <span className="small muted">
@@ -67,7 +62,7 @@ export function AdminSeatingPage() {
           <PendingRequests />
           <LayoutEditor />
         </aside>
-      </main>
+      </div>
     </div>
   );
 }

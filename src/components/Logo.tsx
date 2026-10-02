@@ -1,6 +1,10 @@
-import fallbackLogo from '../assets/logo.jpg';
+import fallbackLogo from '../assets/logo.png';
 
-/** Event logo; dark backgrounds of raster logos blend away via mix-blend-mode: lighten. */
+/** Event logo on a light rounded tile, as in the design. Size comes from the className. */
 export function Logo({ src, className }: { src: string | null | undefined; className?: string }) {
-  return <img className={className} src={src ?? fallbackLogo} alt="" style={{ mixBlendMode: 'lighten', objectFit: 'contain' }} />;
+  return (
+    <span className={'logo-tile' + (className ? ' ' + className : '')}>
+      <img src={src ?? fallbackLogo} alt="" />
+    </span>
+  );
 }

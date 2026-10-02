@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router';
-import { ApiError } from '../api/client';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
+import { useMe } from '../api/auth';
+import type { Me } from '../api/types';
 import { AdminContext } from './AdminContext';
-import { useEvents, useMe } from './adminApi';
+import { useEvents } from './adminApi';
 import { AdminLayout } from './AdminLayout';
-import { AdminLoginPage } from './AdminLoginPage';
 import { AdminPage } from './AdminPage';
 import { AdminSeatingPage } from './AdminSeatingPage';
 import { EventsPage } from './EventsPage';
@@ -16,25 +16,30 @@ const SELECTED_KEY = 'lan-dashboard.admin.event';
 export default function AdminApp() {
   return (
     <ToastProvider>
-      <Routes>
-        <Route path="login" element={<AdminLoginPage />} />
-        <Route path="*" element={<Protected />} />
-      </Routes>
+      <Protected />
     </ToastProvider>
   );
 }
 
+/** Organisers only: visitors go to the login, participants see a short note. */
 function Protected() {
   const me = useMe();
   const location = useLocation();
   if (me.isPending) return null;
-  if (me.error) {
-    if (me.error instanceof ApiError && me.error.status === 401) {
-      return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
-    }
-    return <div className="admin-error error-box">Backend nicht erreichbar: {me.error.message}</div>;
+  if (me.error) return <div className="admin-error error-box">Backend nicht erreichbar: {me.error.message}</div>;
+  if (!me.data) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  if (me.data.role !== 'ORGA') {
+    return (
+      <div className="admin-denied">
+        <h1 className="display">Kein Zugriff</h1>
+        <p className="muted">Der Admin-Bereich ist für das Orga-Team. Dein Account «{me.data.nickname}» hat keine Orga-Rolle.</p>
+        <Link to="/" className="btn btn--primary">
+          Zur Übersicht
+        </Link>
+      </div>
+    );
   }
-  return <WithEvents />;
+  return <WithEvents me={me.data} />;
 }
 
 function readSelected(): number | null {
@@ -45,8 +50,7 @@ function readSelected(): number | null {
   }
 }
 
-function WithEvents() {
-  const me = useMe();
+function WithEvents({ me }: { me: Me }) {
   const events = useEvents();
   const [selected, setSelected] = useState<number | null>(readSelected);
 
@@ -61,7 +65,7 @@ function WithEvents() {
     }
   }, [selected]);
 
-  if (!me.data || events.isPending) return null;
+  if (events.isPending) return null;
 
   if (!event) {
     // Fresh installation: the only thing to do is creating the first event.
@@ -73,13 +77,13 @@ function WithEvents() {
   }
 
   return (
-    <AdminContext.Provider value={{ me: me.data, events: list, event, selectEvent: setSelected }}>
+    <AdminContext.Provider value={{ me, events: list, event, selectEvent: setSelected }}>
       <Routes>
         <Route element={<AdminLayout />}>
           <Route index element={<AdminPage />} />
           <Route path="events" element={<EventsPage onCreated={(id) => setSelected(id)} />} />
+          <Route path="sitzordnung" element={<AdminSeatingPage />} />
         </Route>
-        <Route path="sitzordnung" element={<AdminSeatingPage />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </AdminContext.Provider>

@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { errorMessage } from '../../api/client';
-import type { EventRequest, EventView, InfoItem } from '../../api/types';
+import type { EventRequest, EventView, HeadingKey, InfoItem } from '../../api/types';
+import { AccentInput } from '../AccentInput';
 import { Logo } from '../../components/Logo';
 import { useAdmin } from '../AdminContext';
 import { useEventMutations, useInfos } from '../adminApi';
@@ -20,8 +21,18 @@ function toRequest(e: EventView): EventRequest {
     welcomeText: e.welcomeText,
     kioskIntervalSec: e.kioskIntervalSec,
     kioskViews: e.kioskViews,
+    loginHeadline: e.loginHeadline,
+    headings: { ...e.headings },
   };
 }
+
+const HEADINGS: { key: HeadingKey; label: string; fallback: string }[] = [
+  { key: 'servers', label: 'Gameserver', fallback: 'Gameserver' },
+  { key: 'schedule', label: 'Programm', fallback: 'Programm' },
+  { key: 'tournaments', label: 'Turniere', fallback: 'Turniere' },
+  { key: 'seating', label: 'Sitzplan', fallback: 'Sitzplatzordnung' },
+  { key: 'network', label: 'WLAN-Karte', fallback: 'WLAN' },
+];
 
 export function GeneralSection() {
   const { event } = useAdmin();
@@ -56,15 +67,18 @@ export function GeneralSection() {
     infoDraft.setDraft((list) => list.map((item, i) => (i === index ? { ...item, ...patch } : item)));
 
   return (
-    <Section id="allgemein" title="Allgemein">
-      <label className="lbl">
-        Titel der LAN
-        <input className="in" value={draft.title} onChange={(e) => set('title', e.target.value)} />
-      </label>
-      <label className="lbl">
-        Untertitel (Datum · Ort)
-        <input className="in" value={draft.subtitle ?? ''} onChange={(e) => set('subtitle', e.target.value)} placeholder="17.–19. Oktober · Gemeindesaal" />
-      </label>
+    <Section id="inhalte" title="Inhalte & Willkommen">
+      <AccentInput label="Titel der LAN" value={draft.title} onChange={(v) => set('title', v)} maxLength={120} />
+      <div className="form-grid">
+        <label className="lbl">
+          Ort
+          <input className="in" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder="Gemeindesaal Musterdorf" />
+        </label>
+        <label className="lbl">
+          Untertitel (optional)
+          <input className="in" value={draft.subtitle ?? ''} onChange={(e) => set('subtitle', e.target.value)} placeholder="Die LAN im Dorf" />
+        </label>
+      </div>
       <div className="form-grid">
         <label className="lbl">
           Beginn
@@ -106,17 +120,45 @@ export function GeneralSection() {
           />
         </div>
       </div>
-      <label className="lbl">
-        Willkommens-Titel (Zeilenumbruch erlaubt)
-        <textarea className="in" rows={2} value={draft.welcomeTitle ?? ''} onChange={(e) => set('welcomeTitle', e.target.value)} />
-      </label>
+      <AccentInput
+        label="Willkommens-Titel (Zeilenumbruch erlaubt)"
+        multiline
+        value={draft.welcomeTitle ?? ''}
+        onChange={(v) => set('welcomeTitle', v)}
+        placeholder="Willkommen an der {lila:LAN}."
+        maxLength={300}
+      />
       <label className="lbl">
         Willkommenstext
         <textarea className="in" rows={4} value={draft.welcomeText ?? ''} onChange={(e) => set('welcomeText', e.target.value)} />
       </label>
 
+      <AccentInput
+        label="Slogan auf der Login-Seite"
+        multiline
+        value={draft.loginHeadline ?? ''}
+        onChange={(v) => set('loginHeadline', v)}
+        placeholder={'Platz sichern.\n{lila:Rechner} {blau:einstecken.} {gruen:Zocken.}'}
+        maxLength={300}
+      />
+
+      <details className="details">
+        <summary>Überschriften der Webseite</summary>
+        <p className="admin-hint no-margin">Leer lassen für den Standardtext. Auch hier lassen sich Wörter einfärben.</p>
+        {HEADINGS.map((h) => (
+          <AccentInput
+            key={h.key}
+            label={h.label}
+            value={draft.headings[h.key] ?? ''}
+            placeholder={h.fallback}
+            maxLength={120}
+            onChange={(v) => set('headings', { ...draft.headings, [h.key]: v })}
+          />
+        ))}
+      </details>
+
       <div className="stack-sm">
-        <span className="small muted">Info-Einträge</span>
+        <span className="small muted">Info-Einträge («Gut zu wissen»-Karte)</span>
         {infoDraft.draft.map((info, i) => (
           <div key={i} className="info-row">
             <input className="in" value={info.label} aria-label="Bezeichnung" placeholder="WLAN" onChange={(e) => setInfo(i, { label: e.target.value })} />

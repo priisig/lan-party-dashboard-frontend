@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type {
-  AdminPrincipal,
+  AdminOverview,
   AdminTournament,
-  AdminUser,
-  AdminWithCode,
+  AdminUserView,
   AnnouncementDto,
   CreateEventRequest,
   EventRequest,
@@ -13,14 +12,17 @@ import type {
   IntegrationRequest,
   IntegrationView,
   LayoutRequest,
+  NetworkDto,
   PendingRequest,
   ProviderInfo,
   ScheduleDto,
+  SeatRulesDto,
   SeatMapView,
   ServerDto,
   SettingsView,
   TestResult,
   TournamentRequest,
+  UserRole,
 } from '../api/types';
 
 const base = (eventId: number) => `/api/admin/events/${eventId}`;
@@ -31,30 +33,8 @@ export const adminKeys = {
   event: (id: number) => ['admin', 'event', id] as const,
   list: (id: number, what: string) => ['admin', 'event', id, what] as const,
   settings: ['admin', 'settings'] as const,
-  admins: ['admin', 'admins'] as const,
   types: ['admin', 'integration-types'] as const,
 };
-
-export const useMe = () =>
-  useQuery({ queryKey: adminKeys.me, queryFn: () => api.get<AdminPrincipal>('/api/auth/me'), retry: false, staleTime: 60_000 });
-
-export function useLogin() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: (code: string) => api.post<AdminPrincipal>('/api/auth/login', { code }),
-    onSuccess: (me) => client.setQueryData(adminKeys.me, me),
-  });
-}
-
-export function useLogout() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: () => api.post<void>('/api/auth/logout'),
-    onSettled: () => {
-      client.removeQueries({ queryKey: ['admin'] });
-    },
-  });
-}
 
 export const useEvents = () => useQuery({ queryKey: adminKeys.events, queryFn: () => api.get<EventView[]>('/api/admin/events') });
 
@@ -101,6 +81,14 @@ export function useEventMutations() {
         form.append('file', file);
         return api.post<EventView>(`/api/admin/events/${id}/logo`, form);
       },
+      onSuccess: refresh,
+    }),
+    network: useMutation({
+      mutationFn: ({ id, body }: { id: number; body: NetworkDto }) => api.put<EventView>(`/api/admin/events/${id}/network`, body),
+      onSuccess: refresh,
+    }),
+    seatRules: useMutation({
+      mutationFn: ({ id, body }: { id: number; body: SeatRulesDto }) => api.put<EventView>(`/api/admin/events/${id}/seat-rules`, body),
       onSuccess: refresh,
     }),
     removeLogo: useMutation({ mutationFn: (id: number) => api.del<EventView>(`/api/admin/events/${id}/logo`), onSuccess: refresh }),
@@ -191,13 +179,30 @@ export function useSettings() {
   };
 }
 
-export function useAdmins() {
+/** KPI row of the admin panel. */
+export const useOverview = (eventId: number) =>
+  useQuery({ queryKey: adminKeys.list(eventId, 'overview'), queryFn: () => api.get<AdminOverview>(`${base(eventId)}/overview`), refetchInterval: 30_000 });
+
+/** Accounts with their participant state (payment, check-in, seat) for one event. */
+export function useParticipants(eventId: number) {
   const client = useQueryClient();
-  const refresh = () => client.invalidateQueries({ queryKey: adminKeys.admins });
+  const key = adminKeys.list(eventId, 'participants');
+  const refresh = () => {
+    client.invalidateQueries({ queryKey: key });
+    client.invalidateQueries({ queryKey: adminKeys.list(eventId, 'overview') });
+  };
   return {
-    query: useQuery({ queryKey: adminKeys.admins, queryFn: () => api.get<AdminUser[]>('/api/admin/admins') }),
-    create: useMutation({ mutationFn: (name: string) => api.post<AdminWithCode>('/api/admin/admins', { name }), onSuccess: refresh }),
-    regenerate: useMutation({ mutationFn: (id: number) => api.post<AdminWithCode>(`/api/admin/admins/${id}/code`), onSuccess: refresh }),
-    remove: useMutation({ mutationFn: (id: number) => api.del(`/api/admin/admins/${id}`), onSuccess: refresh }),
+    query: useQuery({ queryKey: key, queryFn: () => api.get<AdminUserView[]>(`${base(eventId)}/participants`) }),
+    update: useMutation({
+      mutationFn: ({ userId, paid, checkedIn }: { userId: number; paid: boolean; checkedIn: boolean }) =>
+        api.put<AdminUserView>(`${base(eventId)}/participants/${userId}`, { paid, checkedIn }),
+      onSuccess: refresh,
+    }),
+    role: useMutation({ mutationFn: ({ id, role }: { id: number; role: UserRole }) => api.put<void>(`/api/admin/users/${id}/role`, { role }), onSuccess: refresh }),
+    enabled: useMutation({
+      mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => api.put<void>(`/api/admin/users/${id}/enabled`, { enabled }),
+      onSuccess: refresh,
+    }),
+    resetPassword: useMutation({ mutationFn: (id: number) => api.post<{ password: string }>(`/api/admin/users/${id}/password-reset`) }),
   };
 }

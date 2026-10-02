@@ -33,7 +33,7 @@ export function ServersSection() {
     });
 
   return (
-    <Section id="server" title="Game Server" action={<AddButton label="Server" onClick={() => setDraft((l) => [...l, { ...EMPTY }])} />}>
+    <Section id="server" title="Gameserver" action={<AddButton label="Server" onClick={() => setDraft((l) => [...l, { ...EMPTY }])} />}>
       {draft.length === 0 && <p className="empty">Noch keine Server.</p>}
       {draft.map((s, i) => (
         <details key={s.id ?? 'new' + i} className="subcard" open={!s.id}>

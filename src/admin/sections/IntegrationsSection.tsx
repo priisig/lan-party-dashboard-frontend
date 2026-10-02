@@ -15,10 +15,8 @@ export function IntegrationsSection() {
 
   return (
     <Section id="integrationen" title="Integrationen">
-      <ChallongeKey />
-      <PushToken />
       <div className="stack-sm">
-        <span className="h h--sm">Nerd Stats · Datenquellen</span>
+        <span className="admin-hint">Datenquellen für die Nerd-Stats-Ansicht (Uptime Kuma, Minecraft …).</span>
         {(api.query.data ?? []).map((i) => (
           <IntegrationEditor key={i.id} integration={i} provider={types.find((t) => t.type === i.type)} />
         ))}
@@ -37,6 +35,16 @@ export function IntegrationsSection() {
           </div>
         )}
       </div>
+    </Section>
+  );
+}
+
+/** Global settings: Challonge API key and the push token for scripts. */
+export function SettingsSection() {
+  return (
+    <Section id="einstellungen" title="Einstellungen">
+      <ChallongeKey />
+      <PushToken />
     </Section>
   );
 }

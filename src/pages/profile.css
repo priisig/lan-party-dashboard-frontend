@@ -1,0 +1,99 @@
+/* Personal profile (prototype "Persönliches Profil"). */
+.profile {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.profile__side {
+  flex: 1 1 18.75rem;
+  max-width: 23.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.profile__side .card,
+.profile__main .card {
+  border-radius: var(--radius-xl);
+}
+.profile__card {
+  align-items: center;
+  text-align: center;
+  padding: 1.75rem 1.5rem;
+}
+.profile__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+.profile__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.profile__seat--ok {
+  background: var(--green-surface);
+  border-color: var(--green-border);
+}
+.profile__seat--ok .profile__eyebrow {
+  color: var(--green-text);
+}
+.profile__seat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.profile__seat-label {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.profile__seat--ok .profile__seat-label {
+  color: var(--green);
+}
+.profile__tournament {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.profile__tournament:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.profile__main {
+  flex: 1 1 35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.profile__form {
+  padding: 1.75rem;
+  gap: 1.125rem;
+}
+.profile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+  gap: 1rem;
+}
+.profile__grid--3 {
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+}
+html[data-tier='mobile'] .profile__side {
+  max-width: none;
+}
+html[data-tier='mobile'] .profile__form {
+  padding: 1.25rem;
+}
