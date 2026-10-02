@@ -1,145 +1,198 @@
 /*
- * Seat map. data-orientation="vertical" (beamer LEFT/RIGHT): rows are columns side by side, seats stacked
- * top to bottom. "horizontal" (beamer TOP/BOTTOM): rows stacked like in the original prototype.
+ * Seat map as a room: a 3×3 grid with the seats in the middle and up to four marker edges around it.
+ * data-orientation only depends on the configured orientation:
+ *   horizontal (ROWS):    rows stacked top to bottom, seats left to right
+ *   vertical   (COLUMNS): rows side by side, seats top to bottom
  */
 .seatmap {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    '. top .'
+    'left room right'
+    '. bottom .';
+  gap: 0.875rem;
   flex-grow: 1;
   min-height: 0;
   min-width: 0;
 }
-.seatmap--left {
-  flex-direction: row;
+
+/* ---------------------------------------------------------------- edges & markers */
+.seatmap__edge {
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 0;
 }
-.seatmap--right {
-  flex-direction: row-reverse;
+.seatmap__edge--top {
+  grid-area: top;
+  flex-direction: column-reverse;
 }
-.seatmap--top {
+.seatmap__edge--bottom {
+  grid-area: bottom;
   flex-direction: column;
 }
-.seatmap--bottom {
-  flex-direction: column-reverse;
+.seatmap__edge--left {
+  grid-area: left;
+  flex-direction: row-reverse;
+}
+.seatmap__edge--right {
+  grid-area: right;
+  flex-direction: row;
 }
 
 .seatmap__stage {
-  border-radius: var(--radius);
-  background: linear-gradient(90deg, var(--gradient-start), var(--blue-bg));
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: var(--text-soft);
+  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.625rem;
-  flex-shrink: 0;
+  padding: 0.75rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
 }
-.seatmap[data-orientation='vertical'] .seatmap__stage {
-  background: linear-gradient(180deg, var(--gradient-start), var(--blue-bg));
+.seatmap__edge--left .seatmap__stage,
+.seatmap__edge--right .seatmap__stage {
   width: 3rem;
   padding: 1rem 0;
 }
-.seatmap[data-orientation='vertical'] .seatmap__stage span {
+.seatmap__edge--left .seatmap__stage span,
+.seatmap__edge--right .seatmap__stage span {
   writing-mode: vertical-rl;
 }
-.seatmap--left .seatmap__stage span {
+.seatmap__edge--left .seatmap__stage span {
   transform: rotate(180deg);
 }
 
-.seatmap__room {
+.seatmap__tags {
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-height: 0;
-  min-width: 0;
-}
-.seatmap__edge,
-.seatmap__edges {
-  font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  font-size: 0.8125rem;
   color: var(--text-faint);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
-.seatmap__edge {
-  text-align: center;
+.seatmap__edge--left .seatmap__tags,
+.seatmap__edge--right .seatmap__tags {
+  grid-template-columns: auto;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
 }
-.seatmap__edges {
-  display: flex;
-  justify-content: space-between;
+.seatmap__tag {
+  white-space: nowrap;
+  align-self: center;
+}
+.seatmap__tag--entrance {
+  color: var(--green-text);
+}
+.seatmap__edge--top .seatmap__tag--start,
+.seatmap__edge--bottom .seatmap__tag--start {
+  grid-column: 1;
+  justify-self: start;
+}
+.seatmap__edge--top .seatmap__tag--center,
+.seatmap__edge--bottom .seatmap__tag--center {
+  grid-column: 2;
+  justify-self: center;
+}
+.seatmap__edge--top .seatmap__tag--end,
+.seatmap__edge--bottom .seatmap__tag--end {
+  grid-column: 3;
+  justify-self: end;
+}
+.seatmap__edge--left .seatmap__tag,
+.seatmap__edge--right .seatmap__tag {
+  writing-mode: vertical-rl;
+  justify-self: center;
+}
+.seatmap__edge--left .seatmap__tag {
+  transform: rotate(180deg);
+}
+.seatmap__edge--left .seatmap__tag--start,
+.seatmap__edge--right .seatmap__tag--start {
+  grid-row: 1;
+  align-self: start;
+}
+.seatmap__edge--left .seatmap__tag--center,
+.seatmap__edge--right .seatmap__tag--center {
+  grid-row: 2;
+}
+.seatmap__edge--left .seatmap__tag--end,
+.seatmap__edge--right .seatmap__tag--end {
+  grid-row: 3;
+  align-self: end;
 }
 
-/* ---------------------------------------------------------------- vertical: rows are columns */
-.seatmap[data-orientation='vertical'] .seatmap__rows {
-  flex-grow: 1;
+/* ---------------------------------------------------------------- rows */
+.seatmap__rows {
+  grid-area: room;
   display: flex;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+}
+.seatmap__row-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  color: var(--text-faint);
+  text-align: center;
+}
+.seatmap__seats {
+  display: grid;
+  gap: 0.375rem;
+}
+
+/* horizontal: rows stacked */
+.seatmap[data-orientation='horizontal'] .seatmap__rows {
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 0.75rem;
+}
+.seatmap[data-orientation='horizontal'] .seatmap__row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.875rem;
+  align-items: center;
+}
+.seatmap[data-orientation='horizontal'] .seatmap__seats {
+  grid-template-columns: repeat(var(--count), minmax(3rem, 1fr));
+}
+.seatmap[data-orientation='horizontal'] .seat {
+  min-height: 3rem;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* vertical: rows are columns side by side */
+.seatmap[data-orientation='vertical'] .seatmap__rows {
+  flex-direction: row;
   justify-content: center;
   gap: clamp(1rem, 4vw, 4rem);
-  min-height: 0;
-  overflow-x: auto;
 }
 .seatmap[data-orientation='vertical'] .seatmap__row {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 0.5rem;
   width: clamp(8rem, 14vw, 16rem);
   flex-shrink: 0;
 }
-.seatmap[data-orientation='vertical'] .seatmap__row-label {
-  text-align: center;
-}
 .seatmap[data-orientation='vertical'] .seatmap__seats {
   flex-grow: 1;
-  display: grid;
   grid-template-rows: repeat(var(--count), minmax(2.75rem, 1fr));
-  gap: 0.375rem;
-  padding: 0.5rem;
-  background: var(--bg-deep);
-  border-radius: var(--radius);
 }
 .seatmap[data-orientation='vertical'] .seat {
   flex-direction: row;
   justify-content: flex-start;
   gap: 0.75rem;
   padding: 0 0.75rem;
-}
-
-/* ---------------------------------------------------------------- horizontal: prototype layout */
-.seatmap[data-orientation='horizontal'] .seatmap__rows {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  gap: 0.75rem;
-  overflow-x: auto;
-}
-.seatmap[data-orientation='horizontal'] .seatmap__row {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 1rem;
-  align-items: center;
-}
-.seatmap[data-orientation='horizontal'] .seatmap__seats {
-  display: grid;
-  grid-template-columns: repeat(var(--count), minmax(3.25rem, 1fr));
-  gap: 0.375rem;
-  padding: 0.5rem;
-  background: var(--bg-deep);
-  border-radius: var(--radius);
-}
-.seatmap[data-orientation='horizontal'] .seat {
-  aspect-ratio: 1.15;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.seatmap__row-label {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.375rem;
-  color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------------- seats */
@@ -153,26 +206,26 @@
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  background: var(--surface-sunken);
-  color: var(--text-soft);
-  border: 1px solid var(--seat-border);
-  transition: transform 0.1s ease, box-shadow 0.15s ease;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  transition: border-color 0.12s ease, box-shadow 0.15s ease;
 }
 .seat:disabled {
   cursor: default;
 }
 .seat:not(:disabled):hover {
-  box-shadow: 0 0 0 1px var(--purple);
+  border-color: var(--purple);
+  color: var(--text);
 }
 .seat__label {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   flex-shrink: 0;
 }
 .seat__name {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.9375rem;
-  opacity: 0.9;
+  font-size: 0.875rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -186,10 +239,10 @@
 .seat--taken {
   background: var(--taken);
   color: var(--taken-text);
-  border-color: var(--taken);
+  border-color: var(--taken-border);
 }
 .seat--blocked {
-  background: repeating-linear-gradient(45deg, var(--border) 0 3px, var(--surface) 3px 6px);
+  background: repeating-linear-gradient(45deg, var(--border) 0 3px, transparent 3px 6px);
   color: var(--text-faint);
   border-color: var(--border);
 }
@@ -197,17 +250,22 @@
   border-style: dashed;
 }
 .seat--pending {
-  border: 1px dashed var(--yellow);
-  color: var(--yellow);
+  border: 1px dashed var(--orange);
+  color: var(--orange);
 }
 .seat.is-highlighted {
-  box-shadow: 0 0 0 2px var(--cyan), 0 0 1.25rem rgba(79, 209, 232, 0.45);
+  box-shadow: 0 0 0 2px var(--blue), 0 0 1.25rem rgba(76, 141, 255, 0.45);
   z-index: 1;
 }
-.seat.is-selected {
+.seat.is-mine {
   background: var(--green);
   color: var(--green-ink);
-  border: 2px solid #b9f5d6;
+  border-color: var(--green);
+}
+.seat.is-selected {
+  background: var(--blue);
+  color: var(--green-ink);
+  border-color: var(--blue);
 }
 .seat__note {
   position: absolute;
@@ -216,7 +274,55 @@
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 50%;
-  background: var(--yellow);
+  background: var(--orange);
+}
+
+/* ---------------------------------------------------------------- compact preview */
+.seatmap--compact {
+  gap: 0.5rem;
+}
+.seatmap--compact .seatmap__stage {
+  padding: 0.375rem;
+  font-size: 0.6875rem;
+}
+.seatmap--compact .seatmap__edge--left .seatmap__stage,
+.seatmap--compact .seatmap__edge--right .seatmap__stage {
+  width: 1.75rem;
+}
+.seatmap--compact .seatmap__tags {
+  font-size: 0.6875rem;
+}
+.seatmap--compact .seatmap__row-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.seatmap--compact .seatmap__seats {
+  gap: 0.25rem;
+}
+.seatmap--compact[data-orientation='horizontal'] .seatmap__row {
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+.seatmap--compact[data-orientation='horizontal'] .seatmap__rows,
+.seatmap--compact[data-orientation='vertical'] .seatmap__rows {
+  gap: 0.625rem;
+}
+.seatmap--compact[data-orientation='horizontal'] .seatmap__seats {
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+}
+.seatmap--compact[data-orientation='vertical'] .seatmap__row {
+  width: auto;
+  flex: 1 1 0;
+  max-width: 4rem;
+}
+.seatmap--compact[data-orientation='vertical'] .seatmap__seats {
+  grid-template-rows: repeat(var(--count), 1.125rem);
+}
+.seatmap--compact .seat {
+  min-height: 1.125rem;
+  border-radius: 0.25rem;
+  cursor: default;
 }
 
 /* ---------------------------------------------------------------- legend */
@@ -224,8 +330,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1.25rem;
-  font-size: 0.9375rem;
-  color: var(--text-soft);
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 .seat-legend > span {
   display: flex;
@@ -233,30 +339,34 @@
   gap: 0.5rem;
 }
 .seat-legend__box {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   border-radius: 0.25rem;
   display: inline-block;
 }
 .seat-legend__box--free {
-  background: var(--surface-sunken);
-  border: 1px solid var(--seat-border);
+  border: 1px solid var(--border-strong);
 }
 .seat-legend__box--taken {
-  background: var(--taken);
+  background: var(--taken-border);
 }
 .seat-legend__box--selected {
+  background: var(--blue);
+}
+.seat-legend__box--mine {
   background: var(--green);
 }
 .seat-legend__box--blocked {
-  background: repeating-linear-gradient(45deg, var(--border) 0 3px, var(--surface) 3px 6px);
+  background: repeating-linear-gradient(45deg, var(--border) 0 3px, transparent 3px 6px);
+  border: 1px solid var(--border);
 }
 
 /* ---------------------------------------------------------------- small screens */
 html[data-tier='mobile'] .seatmap {
   gap: 0.5rem;
 }
-html[data-tier='mobile'] .seatmap[data-orientation='vertical'] .seatmap__stage {
+html[data-tier='mobile'] .seatmap__edge--left .seatmap__stage,
+html[data-tier='mobile'] .seatmap__edge--right .seatmap__stage {
   width: 2rem;
   font-size: 0.75rem;
 }
@@ -264,7 +374,7 @@ html[data-tier='mobile'] .seatmap[data-orientation='vertical'] .seatmap__rows {
   justify-content: flex-start;
   gap: 0.75rem;
 }
-html[data-tier='mobile'] .seatmap[data-orientation='vertical'] .seatmap__row {
+html[data-tier='mobile'] .seatmap[data-orientation='vertical']:not(.seatmap--compact) .seatmap__row {
   width: auto;
   flex: 1 0 8.5rem;
   max-width: 14rem;
@@ -278,12 +388,4 @@ html[data-tier='mobile'] .seat__label {
 }
 html[data-tier='mobile'] .seat__name {
   font-size: 0.8125rem;
-}
-
-/* Row A is always the row closest to the stage. */
-.seatmap--right .seatmap__rows {
-  flex-direction: row-reverse;
-}
-.seatmap--bottom .seatmap__rows {
-  flex-direction: column-reverse;
 }

@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { BeamerSide, SeatMapView } from '../../api/types';
+import type { RoomSide, SeatMapView, SeatOrientation } from '../../api/types';
 import { SeatMap } from './SeatMap';
 
-function map(beamerSide: BeamerSide): SeatMapView {
+function map(orientation: SeatOrientation, beamerSide: RoomSide, extra: Partial<SeatMapView> = {}): SeatMapView {
   const seats = (row: string) =>
     Array.from({ length: 3 }, (_, i) => ({
       label: `${row}${i + 1}`,
@@ -14,9 +14,13 @@ function map(beamerSide: BeamerSide): SeatMapView {
       note: null,
     }));
   return {
-    beamerSide,
-    labelStart: 'Eingang',
-    labelEnd: 'Theke',
+    orientation,
+    rowsReversed: false,
+    numbersReversed: false,
+    markers: [
+      { kind: 'BEAMER', label: 'Beamer', side: beamerSide, align: 'CENTER' },
+      { kind: 'ENTRANCE', label: 'Eingang', side: 'TOP', align: 'END' },
+    ],
     rows: [
       { id: 1, label: 'A', seats: seats('A') },
       { id: 2, label: 'B', seats: seats('B') },
@@ -25,28 +29,42 @@ function map(beamerSide: BeamerSide): SeatMapView {
     free: 4,
     blocked: 0,
     total: 6,
+    ...extra,
   };
 }
 
+const rowLabels = (container: HTMLElement) => [...container.querySelectorAll('.seatmap__row-label')].map((e) => e.textContent);
+
 describe('SeatMap', () => {
-  it.each(['LEFT', 'RIGHT'] as const)('renders rows as vertical columns when the beamer is %s', (side) => {
-    const { container } = render(<SeatMap map={map(side)} />);
-    expect(container.querySelector('.seatmap')).toHaveAttribute('data-orientation', 'vertical');
-    expect(screen.getByText('↑ Eingang')).toBeInTheDocument();
-    expect(screen.getByText('↓ Theke')).toBeInTheDocument();
+  it.each(['LEFT', 'RIGHT', 'TOP', 'BOTTOM'] as const)('keeps the orientation when the beamer is %s', (side) => {
+    const rows = render(<SeatMap map={map('ROWS', side)} />);
+    expect(rows.container.querySelector('.seatmap')).toHaveAttribute('data-orientation', 'horizontal');
+    rows.unmount();
+    const columns = render(<SeatMap map={map('COLUMNS', side)} />);
+    expect(columns.container.querySelector('.seatmap')).toHaveAttribute('data-orientation', 'vertical');
   });
 
-  it.each(['TOP', 'BOTTOM'] as const)('keeps horizontal rows when the beamer is %s', (side) => {
-    const { container } = render(<SeatMap map={map(side)} />);
-    expect(container.querySelector('.seatmap')).toHaveAttribute('data-orientation', 'horizontal');
-    expect(screen.getByText('← Eingang')).toBeInTheDocument();
+  it('places markers on their own edge independent of the beamer', () => {
+    render(<SeatMap map={map('ROWS', 'BOTTOM')} />);
+    expect(within(screen.getByTestId('edge-BOTTOM')).getByText('Beamer')).toBeInTheDocument();
+    const entrance = within(screen.getByTestId('edge-TOP')).getByText('Eingang');
+    expect(entrance.closest('.seatmap__tag')).toHaveClass('seatmap__tag--end');
+    expect(screen.queryByTestId('edge-LEFT')).not.toBeInTheDocument();
+  });
+
+  it('reverses row and seat order on request', () => {
+    const { container } = render(<SeatMap map={map('ROWS', 'TOP', { rowsReversed: true, numbersReversed: true })} />);
+    expect(rowLabels(container)).toEqual(['B', 'A']);
+    const firstRow = container.querySelector('.seatmap__seats')!;
+    expect([...firstRow.querySelectorAll('.seat__label')].map((e) => e.textContent)).toEqual(['B3', 'B2', 'B1']);
   });
 
   it('labels seats for screen readers and reports clicks', async () => {
     const onSelect = vi.fn();
-    render(<SeatMap map={map('LEFT')} onSelect={onSelect} />);
+    render(<SeatMap map={map('COLUMNS', 'LEFT')} mine="B3" onSelect={onSelect} />);
     expect(screen.getByRole('button', { name: 'Platz A1, belegt von RushB' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Platz A3, angefragt' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Platz B3, dein Platz' })).toHaveClass('is-mine');
     await userEvent.click(screen.getByRole('button', { name: 'Platz B2, frei' }));
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ label: 'B2' }));
   });

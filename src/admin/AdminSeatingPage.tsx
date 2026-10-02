@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { errorMessage } from '../api/client';
-import type { BeamerSide, LayoutRequest, SeatView } from '../api/types';
+import type { LayoutRequest, MarkerAlign, MarkerKind, RoomMarker, RoomSide, SeatMapView, SeatView } from '../api/types';
 import { Icon } from '../components/Icon';
 import { SeatLegend, SeatMap } from '../components/seatmap/SeatMap';
 import { useAdmin } from './AdminContext';
@@ -153,11 +153,21 @@ function PendingRequests() {
   );
 }
 
-const SIDES: { value: BeamerSide; label: string }[] = [
-  { value: 'LEFT', label: 'Links' },
-  { value: 'RIGHT', label: 'Rechts' },
+const SIDES: { value: RoomSide; label: string }[] = [
   { value: 'TOP', label: 'Oben' },
+  { value: 'RIGHT', label: 'Rechts' },
   { value: 'BOTTOM', label: 'Unten' },
+  { value: 'LEFT', label: 'Links' },
+];
+const KINDS: { value: MarkerKind; label: string }[] = [
+  { value: 'BEAMER', label: 'Beamer / Bühne' },
+  { value: 'ENTRANCE', label: 'Eingang' },
+  { value: 'OTHER', label: 'Sonstiges' },
+];
+const ALIGNS: { value: MarkerAlign; label: string }[] = [
+  { value: 'START', label: 'Anfang' },
+  { value: 'CENTER', label: 'Mitte' },
+  { value: 'END', label: 'Ende' },
 ];
 
 function nextRowLabel(labels: string[]): string {
@@ -168,6 +178,22 @@ function nextRowLabel(labels: string[]): string {
   return 'X' + labels.length;
 }
 
+const EMPTY_LAYOUT: LayoutRequest = { orientation: 'ROWS', rowsReversed: false, numbersReversed: false, markers: [], rows: [] };
+
+/** Turns the draft into a map so the editor can show a live preview before saving. */
+function previewMap(draft: LayoutRequest, map: SeatMapView | undefined): SeatMapView {
+  const existing = new Map((map?.rows ?? []).flatMap((r) => r.seats).map((s) => [s.label, s]));
+  const rows = draft.rows.map((r, i) => ({
+    id: r.id ?? -(i + 1),
+    label: r.label,
+    seats: Array.from({ length: Math.max(0, Math.min(100, r.seatCount || 0)) }, (_, n) => {
+      const label = r.label + (n + 1);
+      return existing.get(label) ?? { label, number: n + 1, status: 'FREE' as const, gamertag: null, pending: false, note: null };
+    }),
+  }));
+  return { ...draft, rows, taken: 0, free: 0, blocked: 0, total: 0 };
+}
+
 function LayoutEditor() {
   const { event } = useAdmin();
   const api = useSeatsAdmin(event.id);
@@ -176,17 +202,20 @@ function LayoutEditor() {
   const source = useMemo<LayoutRequest | undefined>(
     () =>
       map && {
-        beamerSide: map.beamerSide,
-        labelStart: map.labelStart,
-        labelEnd: map.labelEnd,
+        orientation: map.orientation,
+        rowsReversed: map.rowsReversed,
+        numbersReversed: map.numbersReversed,
+        markers: map.markers,
         rows: map.rows.map((r) => ({ id: r.id, label: r.label, seatCount: r.seats.length })),
       },
     [map],
   );
-  const { draft, setDraft, dirty, reset } = useDraft<LayoutRequest>(source, { beamerSide: 'LEFT', labelStart: null, labelEnd: null, rows: [] });
+  const { draft, setDraft, dirty, reset } = useDraft<LayoutRequest>(source, EMPTY_LAYOUT);
   const set = <K extends keyof LayoutRequest>(key: K, value: LayoutRequest[K]) => setDraft((d) => ({ ...d, [key]: value }));
   const setRow = (i: number, patch: Partial<LayoutRequest['rows'][number]>) => set('rows', draft.rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  const vertical = draft.beamerSide === 'LEFT' || draft.beamerSide === 'RIGHT';
+  const setMarker = (i: number, patch: Partial<RoomMarker>) => set('markers', draft.markers.map((m, j) => (j === i ? { ...m, ...patch } : m)));
+  const vertical = draft.orientation === 'COLUMNS';
+  const preview = useMemo(() => previewMap(draft, map), [draft, map]);
 
   const save = () => {
     const removed = (source?.rows ?? []).reduce((sum, r) => {
@@ -194,6 +223,10 @@ function LayoutEditor() {
       return sum + Math.max(0, r.seatCount - (next?.seatCount ?? 0));
     }, 0);
     if (removed > 0 && !window.confirm(`${removed} Plätze fallen weg (inkl. Zuweisungen). Fortfahren?`)) return;
+    if (draft.markers.some((m) => !m.label.trim())) {
+      toast('Jede Markierung braucht eine Beschriftung.', 'error');
+      return;
+    }
     api.layout.mutate(draft, {
       onSuccess: () => {
         reset();
@@ -206,17 +239,39 @@ function LayoutEditor() {
   return (
     <section className="card">
       <h2 className="h">Layout</h2>
-      <label className="lbl">
-        Beamer / Bühne
-        <div role="radiogroup" className="segmented">
-          {SIDES.map((s) => (
-            <button key={s.value} type="button" role="radio" aria-checked={draft.beamerSide === s.value} className={'segmented__btn' + (draft.beamerSide === s.value ? ' is-on' : '')} onClick={() => set('beamerSide', s.value)}>
-              {s.label}
+      <div className="lbl">
+        Ausrichtung der Reihen
+        <div role="radiogroup" aria-label="Ausrichtung" className="segmented">
+          {(['ROWS', 'COLUMNS'] as const).map((o) => (
+            <button key={o} type="button" role="radio" aria-checked={draft.orientation === o} className={'segmented__btn' + (draft.orientation === o ? ' is-on' : '')} onClick={() => set('orientation', o)}>
+              {o === 'ROWS' ? 'Waagrecht' : 'Senkrecht'}
             </button>
           ))}
         </div>
-      </label>
-      <p className="small muted no-margin">{vertical ? 'Reihen laufen senkrecht (90° gedreht), Platz 1 ist oben.' : 'Reihen laufen waagrecht, Platz 1 ist links.'} Reihe {draft.rows[0]?.label ?? 'A'} steht am nächsten zur Bühne.</p>
+      </div>
+      <div className="form-grid">
+        <div className="lbl">
+          Reihe {draft.rows[0]?.label ?? 'A'} ist
+          <div role="radiogroup" aria-label="Reihenfolge" className="segmented">
+            {[false, true].map((rev) => (
+              <button key={String(rev)} type="button" role="radio" aria-checked={draft.rowsReversed === rev} className={'segmented__btn' + (draft.rowsReversed === rev ? ' is-on' : '')} onClick={() => set('rowsReversed', rev)}>
+                {vertical ? (rev ? 'rechts' : 'links') : rev ? 'unten' : 'oben'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="lbl">
+          Platz 1 ist
+          <div role="radiogroup" aria-label="Platznummerierung" className="segmented">
+            {[false, true].map((rev) => (
+              <button key={String(rev)} type="button" role="radio" aria-checked={draft.numbersReversed === rev} className={'segmented__btn' + (draft.numbersReversed === rev ? ' is-on' : '')} onClick={() => set('numbersReversed', rev)}>
+                {vertical ? (rev ? 'unten' : 'oben') : rev ? 'rechts' : 'links'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="stack-sm">
         <div className="layout-row layout-row--head small muted">
           <span>Reihe</span>
@@ -238,16 +293,61 @@ function LayoutEditor() {
           + Reihe
         </button>
       </div>
-      <div className="form-grid">
-        <label className="lbl">
-          {vertical ? 'Beschriftung oben' : 'Beschriftung links'}
-          <input className="in" value={draft.labelStart ?? ''} onChange={(e) => set('labelStart', e.target.value)} placeholder="Eingang" />
-        </label>
-        <label className="lbl">
-          {vertical ? 'Beschriftung unten' : 'Beschriftung rechts'}
-          <input className="in" value={draft.labelEnd ?? ''} onChange={(e) => set('labelEnd', e.target.value)} placeholder="Theke" />
-        </label>
+
+      <div className="stack-sm">
+        <h3 className="h h--sm">Markierungen im Raum</h3>
+        <p className="small muted no-margin">Beamer, Eingang, Theke … unabhängig von der Ausrichtung an einer beliebigen Seite platzieren.</p>
+        {draft.markers.map((m, i) => (
+          <div key={i} className="marker-row">
+            <input className="in" aria-label="Beschriftung" maxLength={60} value={m.label} onChange={(e) => setMarker(i, { label: e.target.value })} placeholder="Beschriftung" />
+            <select className="in" aria-label="Art" value={m.kind} onChange={(e) => setMarker(i, { kind: e.target.value as MarkerKind })}>
+              {KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+            <select className="in" aria-label="Seite" value={m.side} onChange={(e) => setMarker(i, { side: e.target.value as RoomSide })}>
+              {SIDES.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+            <select className="in" aria-label="Position" value={m.align} onChange={(e) => setMarker(i, { align: e.target.value as MarkerAlign })} disabled={m.kind === 'BEAMER'}>
+              {ALIGNS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+            <RemoveButton label={`Markierung ${m.label} entfernen`} onClick={() => set('markers', draft.markers.filter((_, j) => j !== i))} />
+          </div>
+        ))}
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm align-start"
+          disabled={draft.markers.length >= 20}
+          onClick={() =>
+            set('markers', [
+              ...draft.markers,
+              draft.markers.some((m) => m.kind === 'BEAMER')
+                ? { kind: 'OTHER', label: '', side: 'BOTTOM', align: 'CENTER' }
+                : { kind: 'BEAMER', label: 'Bühne · Beamer', side: 'TOP', align: 'CENTER' },
+            ])
+          }
+        >
+          + Markierung
+        </button>
       </div>
+
+      {dirty && (
+        <div className="layout-preview" aria-label="Vorschau">
+          <span className="h h--sm">Vorschau</span>
+          <SeatMap map={preview} compact />
+        </div>
+      )}
+
       <div className="row-actions">
         {dirty && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => reset()}>

@@ -1,6 +1,16 @@
 // Mirrors the backend DTOs (com.lanparty.dashboard.*). Instants are ISO strings.
 
-export type BeamerSide = 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM';
+export type RoomSide = 'TOP' | 'RIGHT' | 'BOTTOM' | 'LEFT';
+export type SeatOrientation = 'ROWS' | 'COLUMNS';
+export type MarkerKind = 'BEAMER' | 'ENTRANCE' | 'OTHER';
+export type MarkerAlign = 'START' | 'CENTER' | 'END';
+
+export interface RoomMarker {
+  kind: MarkerKind;
+  label: string;
+  side: RoomSide;
+  align: MarkerAlign;
+}
 
 export interface EventView {
   id: number;
@@ -15,7 +25,6 @@ export interface EventView {
   welcomeTitle: string | null;
   welcomeText: string | null;
   logoUrl: string | null;
-  beamerSide: BeamerSide;
   kioskIntervalSec: number;
   kioskViews: string;
 }
@@ -161,9 +170,10 @@ export interface RowView {
 }
 
 export interface SeatMapView {
-  beamerSide: BeamerSide;
-  labelStart: string | null;
-  labelEnd: string | null;
+  orientation: SeatOrientation;
+  rowsReversed: boolean;
+  numbersReversed: boolean;
+  markers: RoomMarker[];
   rows: RowView[];
   taken: number;
   free: number;
@@ -337,9 +347,10 @@ export interface RowLayout {
 }
 
 export interface LayoutRequest {
-  beamerSide: BeamerSide;
-  labelStart: string | null;
-  labelEnd: string | null;
+  orientation: SeatOrientation;
+  rowsReversed: boolean;
+  numbersReversed: boolean;
+  markers: RoomMarker[];
   rows: RowLayout[];
 }
 

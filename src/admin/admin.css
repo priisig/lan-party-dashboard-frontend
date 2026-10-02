@@ -741,3 +741,23 @@ html[data-tier='mobile'] .admin-seating__main > .card {
 html[data-tier='mobile'] .logo-edit {
   align-items: flex-start;
 }
+
+.marker-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+html[data-tier='mobile'] .marker-row {
+  grid-template-columns: 1fr 1fr;
+}
+.layout-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  max-height: 22rem;
+}
